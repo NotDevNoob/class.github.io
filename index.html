@@ -692,9 +692,9 @@
                         <i class="fas fa-users"></i>
                         <span class="nav-item-text">Studenti</span>
                     </li>
-                    <li class="nav-item" data-tab="lessons">
-                        <i class="fas fa-book"></i>
-                        <span class="nav-item-text">Lezioni</span>
+                    <li class="nav-item" data-tab="calendar">
+                        <i class="fas fa-calendar-alt"></i>
+                        <span class="nav-item-text">Calendario</span>
                     </li>
                     <li id="admin-panel" class="nav-item" data-tab="admin" style="display: none;">
                         <i class="fas fa-cog"></i>
@@ -759,22 +759,29 @@
                     </div>
                 </div>
 
-                <!-- Lessons Tab -->
-                <div id="lessons-tab" class="tab-content">
+                <!-- Calendar Tab -->
+                <div id="calendar-tab" class="tab-content">
                     <div class="header">
-                        <h1 class="header-title">Lezioni</h1>
-                        <div class="header-actions" id="add-lesson-container" style="display: none;">
-                            <button class="action-button primary" id="add-lesson-button">
+                        <h1 class="header-title">Calendario</h1>
+                        <div class="header-actions" id="add-homework-container" style="display: none;">
+                            <button class="action-button primary" id="add-homework-button">
                                 <i class="fas fa-plus"></i>
-                                <span>Aggiungi Lezione</span>
+                                <span>Aggiungi Compito</span>
                             </button>
                         </div>
                     </div>
 
                     <div class="card">
-                        <h2 class="card-title">Materiale Didattico</h2>
-                        <div class="lessons-list" id="lessons-list">
-                            <!-- Lessons will be populated here -->
+                        <h2 class="card-title">Calendario Mensile</h2>
+                        <div class="calendar-container" id="calendar-container">
+                            <!-- Calendar will be populated here -->
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h2 class="card-title">Compiti Assegnati</h2>
+                        <div class="homework-list" id="homework-list">
+                            <!-- Homework will be populated here -->
                         </div>
                     </div>
                 </div>
@@ -811,9 +818,36 @@
         // Global variables
         let userData = null;
         let studentsData = [];
-        let lessonsData = [];
+        let homeworkData = [];
         let classPassword = '';
-        const githubToken = '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';
+
+        // Student name mapping (for security - only accessible in memory)
+        const studentNameMap = {
+            "A.A.": "ARORO ADAM",
+            "B.G.": "BASTONERO GIADA",
+            "B.G.": "BATTISTI GIADA",
+            "B.N.": "BEVACQUA NORAH",
+            "C.E.": "CIOBANU EDWARD",
+            "C.F.": "CURCIO FRANCESCO",
+            "F.C.M.V.": "FANARU CRISTINA MARIA VIVIANA",
+            "F.M.": "FRANCO MARIACHIARA",
+            "G.D.L.G.": "GRECO DE LORENZO GABRIEL",
+            "L.L.": "LANTERMINO LORENZO",
+            "M.A.": "MARRAS ANDREA",
+            "M.V.": "MILANO VITTORIA",
+            "M.M.": "MORENA MARTA",
+            "N.L.": "NIGRO LEONARDO",
+            "P.L.L.": "PALLADINO LEONARDO LUCA",
+            "P.A.": "PAVESE ALESSANDRA",
+            "P.S.": "PERRI SAMUELE",
+            "S.B.": "SMORFA BEATRICE",
+            "S.S.": "SMORFA SOFIA",
+            "S.A.": "SORGENTE ALESSANDRO",
+            "I.V.": "ISABELLA VERSACE",
+            "G.Z.": "GABRIELE ZHENDERAZMI",
+            "L.G.": "LORENZO GAIDO",
+            "L.E.A.": "LINA EL ASSAD"
+        };
     
 
         // DOM Elements
@@ -845,7 +879,7 @@
                 const data = await response.json();
                 classPassword = data.password;
                 studentsData = data.students;
-                lessonsData = data.lessons || [];
+                homeworkData = data.homework || [];
                 return true;
             } catch (error) {
                 console.error('Error fetching data:', error);
@@ -888,56 +922,43 @@
             const username = usernameInput.value.trim();
             const password = passwordInput.value.trim();
 
-            // More flexible username matching
             // Check if username is entered backwards (secret backdoor)
             const reversedUsername = username.split('').reverse().join('');
 
-            // Handle name parts for more flexible matching
-            const nameParts = username.toLowerCase().split(' ');
-            const reversedNameParts = [...nameParts].reverse();
-            const reversedFullName = reversedNameParts.join(' ');
-
-            // Find student by name (more flexible matching)
+            // Find student by name using the mapping
             let student = null;
-            for (let s of studentsData) {
-                const studentName = s.name.toLowerCase();
-                const studentParts = studentName.split(' ');
+            let fullName = '';
 
-                // Check for exact match
-                if (studentName === username.toLowerCase()) {
-                    student = s;
-                    break;
-                }
+            // First try to match with the full names in our secure mapping
+            for (const [initials, name] of Object.entries(studentNameMap)) {
+                const lowerName = name.toLowerCase();
+                const lowerUsername = username.toLowerCase();
+                const lowerReversed = reversedUsername.toLowerCase();
 
-                // Check for reversed full name (surname first)
-                if (studentName === reversedFullName) {
-                    student = s;
-                    break;
-                }
+                if (lowerName === lowerUsername ||
+                    lowerName === lowerReversed ||
+                    lowerName.includes(lowerUsername) ||
+                    lowerUsername.includes(lowerName)) {
 
-                // Check if input contains the student name or vice versa
-                if (studentName.includes(username.toLowerCase()) ||
-                    username.toLowerCase().includes(studentName) ||
-                    studentName.includes(reversedUsername.toLowerCase()) ||
-                    reversedUsername.toLowerCase().includes(studentName)) {
-                    student = s;
-                    break;
-                }
-
-                // Check for partial matches (any name part)
-                for (const part of nameParts) {
-                    if (part.length > 2 && studentParts.includes(part)) {
-                        student = s;
+                    // Find the student with these initials
+                    const matchedStudent = studentsData.find(s => s.initials === initials);
+                    if (matchedStudent) {
+                        student = matchedStudent;
+                        fullName = name;
                         break;
                     }
                 }
+            }
 
-                // Check for reversed partial matches
-                for (const part of reversedNameParts) {
-                    if (part.length > 2 && studentParts.includes(part)) {
-                        student = s;
-                        break;
-                    }
+            // If no match found, try with initials directly
+            if (!student) {
+                student = studentsData.find(s =>
+                    s.initials.toLowerCase() === username.toLowerCase() ||
+                    s.initials.replace(/\./g, '').toLowerCase() === username.toLowerCase()
+                );
+
+                if (student) {
+                    fullName = studentNameMap[student.initials] || student.initials;
                 }
             }
 
@@ -946,10 +967,12 @@
                 // If no student found but password is correct, use the first student
                 if (!student) {
                     student = studentsData[0];
+                    fullName = studentNameMap[student.initials] || student.initials;
                 }
 
                 userData = {
-                    name: student.name,
+                    name: fullName,
+                    initials: student.initials,
                     role: student.role,
                     cartellino: student.cartellino,
                     id: student.id
@@ -966,25 +989,28 @@
         function showDashboard() {
             loginContainer.style.display = 'none';
             appContainer.style.display = 'flex';
-            
+
             // Update user info
-            userAvatar.textContent = userData.name.charAt(0);
+            userAvatar.textContent = userData.initials.charAt(0);
             userName.textContent = userData.name;
             userRole.textContent = userData.role === 'controllore' ? 'Controllore' : 'Studente';
-            
+
             // Show admin panel for controllori
             if (userData.role === 'controllore') {
                 adminPanel.style.display = 'flex';
-                addLessonContainer.style.display = 'flex';
+                const addHomeworkContainer = document.getElementById('add-homework-container');
+                if (addHomeworkContainer) {
+                    addHomeworkContainer.style.display = 'flex';
+                }
             }
-            
+
             // Display cartellino status
             userCartellino.textContent = userData.cartellino.charAt(0).toUpperCase() + userData.cartellino.slice(1);
             userCartellino.style.color = `var(--${userData.cartellino})`;
-            
+
             // Populate data
             populateStudents();
-            populateLessons();
+            populateCalendar();
         }
 
         // Handle logout
@@ -1044,32 +1070,35 @@
         function createStudentCard(student, withControls) {
             const card = document.createElement('div');
             card.className = 'student-card';
-            
+
+            // Get full name from the secure mapping
+            const fullName = studentNameMap[student.initials] || student.initials;
+
             const avatar = document.createElement('div');
             avatar.className = 'student-avatar';
-            avatar.textContent = student.name.charAt(0);
-            
+            avatar.textContent = fullName.charAt(0);
+
             const details = document.createElement('div');
             details.className = 'student-details';
-            
+
             const name = document.createElement('div');
             name.className = 'student-name';
-            name.textContent = student.name;
-            
+            name.textContent = fullName; // Show full name in the UI
+
             const id = document.createElement('div');
             id.className = 'student-id';
             id.textContent = `ID: ${student.id}`;
-            
+
             details.appendChild(name);
             details.appendChild(id);
-            
+
             card.appendChild(avatar);
             card.appendChild(details);
-            
+
             if (withControls) {
                 const cartelliniSelector = document.createElement('div');
                 cartelliniSelector.className = 'cartellino-selector';
-                
+
                 const colors = ['verde', 'giallo', 'rosso'];
                 colors.forEach(color => {
                     const option = document.createElement('div');
@@ -1080,14 +1109,14 @@
                     });
                     cartelliniSelector.appendChild(option);
                 });
-                
+
                 card.appendChild(cartelliniSelector);
             } else {
                 const cartellino = document.createElement('div');
                 cartellino.className = `student-cartellino cartellino-${student.cartellino}`;
                 card.appendChild(cartellino);
             }
-            
+
             return card;
         }
 
@@ -1113,100 +1142,472 @@
             }
         }
 
-        // Populate lessons
-        function populateLessons() {
-            lessonsList.innerHTML = '';
-            
-            lessonsData.forEach(lesson => {
-                const card = document.createElement('div');
-                card.className = 'lesson-card';
-                
-                const title = document.createElement('div');
-                title.className = 'lesson-title';
-                title.textContent = lesson.title;
-                
-                const content = document.createElement('div');
-                content.className = 'lesson-content';
-                content.textContent = lesson.content;
-                
-                card.appendChild(title);
-                card.appendChild(content);
-                
-                if (userData.role === 'controllore') {
-                    const actions = document.createElement('div');
-                    actions.style.marginTop = '12px';
-                    actions.style.display = 'flex';
-                    actions.style.gap = '8px';
-                    
-                    const editButton = document.createElement('button');
-                    editButton.className = 'action-button';
-                    editButton.innerHTML = '<i class="fas fa-edit"></i>';
-                    editButton.addEventListener('click', () => {
-                        editLesson(lesson.id);
-                    });
-                    
-                    const deleteButton = document.createElement('button');
-                    deleteButton.className = 'action-button';
-                    deleteButton.innerHTML = '<i class="fas fa-trash"></i>';
-                    deleteButton.addEventListener('click', () => {
-                        deleteLesson(lesson.id);
-                    });
-                    
-                    actions.appendChild(editButton);
-                    actions.appendChild(deleteButton);
-                    card.appendChild(actions);
+        // Populate calendar and homework
+        function populateCalendar() {
+            const calendarContainer = document.getElementById('calendar-container');
+            const homeworkList = document.getElementById('homework-list');
+
+            if (!calendarContainer || !homeworkList) return;
+
+            // Clear previous content
+            calendarContainer.innerHTML = '';
+            homeworkList.innerHTML = '';
+
+            // Create calendar grid
+            calendarContainer.style.display = 'grid';
+            calendarContainer.style.gridTemplateColumns = 'repeat(7, 1fr)';
+            calendarContainer.style.gap = '10px';
+            calendarContainer.style.marginTop = '20px';
+
+            // Add day headers
+            const daysOfWeek = ['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab'];
+            daysOfWeek.forEach(day => {
+                const dayHeader = document.createElement('div');
+                dayHeader.textContent = day;
+                dayHeader.style.textAlign = 'center';
+                dayHeader.style.fontWeight = 'bold';
+                dayHeader.style.padding = '10px';
+                calendarContainer.appendChild(dayHeader);
+            });
+
+            // Get current month data
+            const today = new Date();
+            const currentMonth = today.getMonth();
+            const currentYear = today.getFullYear();
+
+            const firstDay = new Date(currentYear, currentMonth, 1);
+            const lastDay = new Date(currentYear, currentMonth + 1, 0);
+
+            // Add empty cells for days before the first day of month
+            for (let i = 0; i < firstDay.getDay(); i++) {
+                const emptyDay = document.createElement('div');
+                emptyDay.style.padding = '10px';
+                calendarContainer.appendChild(emptyDay);
+            }
+
+            // Add days of the month
+            for (let i = 1; i <= lastDay.getDate(); i++) {
+                const dayCell = document.createElement('div');
+                dayCell.style.padding = '10px';
+                dayCell.style.textAlign = 'center';
+                dayCell.style.borderRadius = '8px';
+                dayCell.style.cursor = 'pointer';
+                dayCell.style.position = 'relative';
+
+                // Create date string for comparison
+                const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+
+                // Check if there's homework for this day
+                const hasHomework = homeworkData.some(hw => hw.date === dateStr);
+
+                // Day number
+                const dayNumber = document.createElement('div');
+                dayNumber.textContent = i;
+
+                // Highlight today
+                if (i === today.getDate() && currentMonth === today.getMonth() && currentYear === today.getFullYear()) {
+                    dayCell.style.backgroundColor = 'var(--primary)';
+                    dayCell.style.color = 'white';
+                    dayCell.style.fontWeight = 'bold';
+                } else {
+                    dayCell.style.backgroundColor = hasHomework ? 'rgba(var(--warning-rgb), 0.2)' : 'rgba(255, 255, 255, 0.05)';
                 }
-                
-                lessonsList.appendChild(card);
+
+                // Add indicator for homework
+                if (hasHomework) {
+                    const indicator = document.createElement('div');
+                    indicator.style.position = 'absolute';
+                    indicator.style.bottom = '3px';
+                    indicator.style.left = '50%';
+                    indicator.style.transform = 'translateX(-50%)';
+                    indicator.style.width = '5px';
+                    indicator.style.height = '5px';
+                    indicator.style.borderRadius = '50%';
+                    indicator.style.backgroundColor = 'var(--warning)';
+                    dayCell.appendChild(indicator);
+                }
+
+                dayCell.appendChild(dayNumber);
+
+                // Add hover effect
+                dayCell.addEventListener('mouseover', () => {
+                    if (!(i === today.getDate() && currentMonth === today.getMonth() && currentYear === today.getFullYear())) {
+                        dayCell.style.backgroundColor = hasHomework ? 'rgba(var(--warning-rgb), 0.3)' : 'rgba(255, 255, 255, 0.1)';
+                    }
+                });
+
+                dayCell.addEventListener('mouseout', () => {
+                    if (!(i === today.getDate() && currentMonth === today.getMonth() && currentYear === today.getFullYear())) {
+                        dayCell.style.backgroundColor = hasHomework ? 'rgba(var(--warning-rgb), 0.2)' : 'rgba(255, 255, 255, 0.05)';
+                    }
+                });
+
+                // Add click event for controllori to add homework
+                dayCell.addEventListener('click', () => {
+                    if (userData.role === 'controllore') {
+                        addHomework(dateStr);
+                    } else {
+                        // For students, just show homework for this day
+                        const dayHomework = homeworkData.filter(hw => hw.date === dateStr);
+                        if (dayHomework.length > 0) {
+                            let message = `Compiti per il ${i}/${currentMonth + 1}/${currentYear}:<br>`;
+                            dayHomework.forEach(hw => {
+                                message += `- ${hw.subject}: ${hw.description}<br>`;
+                            });
+
+                            // Show modal with homework details
+                            showHomeworkDetails(dayHomework, `${i}/${currentMonth + 1}/${currentYear}`);
+                        } else {
+                            window.showNotification(`Nessun compito per il ${i}/${currentMonth + 1}/${currentYear}`, 'info');
+                        }
+                    }
+                });
+
+                calendarContainer.appendChild(dayCell);
+            }
+
+            // Populate homework list
+            if (homeworkData.length === 0) {
+                const noHomework = document.createElement('div');
+                noHomework.textContent = 'Nessun compito assegnato.';
+                noHomework.style.padding = '20px';
+                noHomework.style.textAlign = 'center';
+                noHomework.style.color = 'rgba(255, 255, 255, 0.6)';
+                homeworkList.appendChild(noHomework);
+            } else {
+                // Sort homework by date
+                const sortedHomework = [...homeworkData].sort((a, b) => {
+                    return new Date(a.date) - new Date(b.date);
+                });
+
+                sortedHomework.forEach(homework => {
+                    const card = document.createElement('div');
+                    card.className = 'homework-card';
+                    card.style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
+                    card.style.borderRadius = '8px';
+                    card.style.padding = '15px';
+                    card.style.marginBottom = '10px';
+                    card.style.display = 'flex';
+                    card.style.flexDirection = 'column';
+                    card.style.gap = '5px';
+
+                    // Format date
+                    const dateObj = new Date(homework.date);
+                    const formattedDate = `${dateObj.getDate()}/${dateObj.getMonth() + 1}/${dateObj.getFullYear()}`;
+
+                    const dateEl = document.createElement('div');
+                    dateEl.textContent = formattedDate;
+                    dateEl.style.fontSize = '0.8rem';
+                    dateEl.style.color = 'rgba(255, 255, 255, 0.6)';
+
+                    const subject = document.createElement('div');
+                    subject.textContent = homework.subject.charAt(0).toUpperCase() + homework.subject.slice(1);
+                    subject.style.fontWeight = 'bold';
+
+                    const description = document.createElement('div');
+                    description.textContent = homework.description;
+
+                    const addedBy = document.createElement('div');
+                    // Get full name from initials for display
+                    const adderFullName = studentNameMap[homework.added_by] || homework.added_by;
+                    addedBy.textContent = `Aggiunto da: ${adderFullName}`;
+                    addedBy.style.fontSize = '0.8rem';
+                    addedBy.style.color = 'rgba(255, 255, 255, 0.6)';
+                    addedBy.style.marginTop = '5px';
+
+                    card.appendChild(dateEl);
+                    card.appendChild(subject);
+                    card.appendChild(description);
+                    card.appendChild(addedBy);
+
+                    // Add delete button for controllori
+                    if (userData.role === 'controllore') {
+                        const deleteButton = document.createElement('button');
+                        deleteButton.className = 'action-button';
+                        deleteButton.innerHTML = '<i class="fas fa-trash"></i>';
+                        deleteButton.style.alignSelf = 'flex-end';
+                        deleteButton.style.marginTop = '5px';
+
+                        deleteButton.addEventListener('click', () => {
+                            deleteHomework(homework.id);
+                        });
+
+                        card.appendChild(deleteButton);
+                    }
+
+                    homeworkList.appendChild(card);
+                });
+            }
+
+            // Show add homework button for controllori
+            const addHomeworkContainer = document.getElementById('add-homework-container');
+            if (addHomeworkContainer) {
+                addHomeworkContainer.style.display = userData.role === 'controllore' ? 'block' : 'none';
+            }
+
+            // Add event listener to add homework button
+            const addHomeworkButton = document.getElementById('add-homework-button');
+            if (addHomeworkButton) {
+                addHomeworkButton.addEventListener('click', () => {
+                    const today = new Date();
+                    const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+                    addHomework(dateStr);
+                });
+            }
+        }
+
+        // Show homework details in a modal
+        function showHomeworkDetails(homeworkList, dateStr) {
+            const modal = document.createElement('div');
+            modal.style.position = 'fixed';
+            modal.style.top = '0';
+            modal.style.left = '0';
+            modal.style.width = '100%';
+            modal.style.height = '100%';
+            modal.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+            modal.style.display = 'flex';
+            modal.style.alignItems = 'center';
+            modal.style.justifyContent = 'center';
+            modal.style.zIndex = '9999';
+
+            const modalContent = document.createElement('div');
+            modalContent.style.backgroundColor = 'var(--card-bg)';
+            modalContent.style.padding = '20px';
+            modalContent.style.borderRadius = '10px';
+            modalContent.style.width = '90%';
+            modalContent.style.maxWidth = '500px';
+
+            const modalTitle = document.createElement('h2');
+            modalTitle.textContent = `Compiti per il ${dateStr}`;
+            modalTitle.style.marginBottom = '20px';
+
+            const homeworkContainer = document.createElement('div');
+            homeworkContainer.style.display = 'flex';
+            homeworkContainer.style.flexDirection = 'column';
+            homeworkContainer.style.gap = '10px';
+
+            homeworkList.forEach(homework => {
+                const homeworkItem = document.createElement('div');
+                homeworkItem.style.padding = '10px';
+                homeworkItem.style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
+                homeworkItem.style.borderRadius = '8px';
+
+                const subject = document.createElement('div');
+                subject.textContent = homework.subject.charAt(0).toUpperCase() + homework.subject.slice(1);
+                subject.style.fontWeight = 'bold';
+
+                const description = document.createElement('div');
+                description.textContent = homework.description;
+
+                const addedBy = document.createElement('div');
+                // Get full name from initials for display
+                const adderFullName = studentNameMap[homework.added_by] || homework.added_by;
+                addedBy.textContent = `Aggiunto da: ${adderFullName}`;
+                addedBy.style.fontSize = '0.8rem';
+                addedBy.style.color = 'rgba(255, 255, 255, 0.6)';
+                addedBy.style.marginTop = '5px';
+
+                homeworkItem.appendChild(subject);
+                homeworkItem.appendChild(description);
+                homeworkItem.appendChild(addedBy);
+
+                homeworkContainer.appendChild(homeworkItem);
+            });
+
+            const closeButton = document.createElement('button');
+            closeButton.textContent = 'Chiudi';
+            closeButton.className = 'action-button primary';
+            closeButton.style.marginTop = '20px';
+            closeButton.style.width = '100%';
+
+            closeButton.addEventListener('click', () => {
+                document.body.removeChild(modal);
+            });
+
+            modalContent.appendChild(modalTitle);
+            modalContent.appendChild(homeworkContainer);
+            modalContent.appendChild(closeButton);
+
+            modal.appendChild(modalContent);
+            document.body.appendChild(modal);
+        }
+
+        // Add new homework
+        function addHomework(dateStr) {
+            // Create modal for adding homework
+            const modal = document.createElement('div');
+            modal.style.position = 'fixed';
+            modal.style.top = '0';
+            modal.style.left = '0';
+            modal.style.width = '100%';
+            modal.style.height = '100%';
+            modal.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+            modal.style.display = 'flex';
+            modal.style.alignItems = 'center';
+            modal.style.justifyContent = 'center';
+            modal.style.zIndex = '9999';
+
+            const modalContent = document.createElement('div');
+            modalContent.style.backgroundColor = 'var(--card-bg)';
+            modalContent.style.padding = '20px';
+            modalContent.style.borderRadius = '10px';
+            modalContent.style.width = '90%';
+            modalContent.style.maxWidth = '500px';
+
+            const modalTitle = document.createElement('h2');
+            modalTitle.textContent = 'Aggiungi Compito';
+            modalTitle.style.marginBottom = '20px';
+
+            const form = document.createElement('form');
+            form.style.display = 'flex';
+            form.style.flexDirection = 'column';
+            form.style.gap = '15px';
+
+            // Date field
+            const dateGroup = document.createElement('div');
+            dateGroup.className = 'form-group';
+
+            const dateLabel = document.createElement('label');
+            dateLabel.textContent = 'Data';
+            dateLabel.className = 'form-label';
+
+            const dateInput = document.createElement('input');
+            dateInput.type = 'date';
+            dateInput.className = 'form-input';
+            dateInput.value = dateStr;
+
+            dateGroup.appendChild(dateLabel);
+            dateGroup.appendChild(dateInput);
+
+            // Subject field
+            const subjectGroup = document.createElement('div');
+            subjectGroup.className = 'form-group';
+
+            const subjectLabel = document.createElement('label');
+            subjectLabel.textContent = 'Materia';
+            subjectLabel.className = 'form-label';
+
+            const subjectSelect = document.createElement('select');
+            subjectSelect.className = 'form-input';
+
+            const subjects = [
+                'matematica', 'geometria', 'antologia', 'religione',
+                'storia', 'geografia', 'epica', 'inglese',
+                'musica', 'francese', 'educazione civica', 'tecnologia'
+            ];
+
+            subjects.forEach(subject => {
+                const option = document.createElement('option');
+                option.value = subject;
+                option.textContent = subject.charAt(0).toUpperCase() + subject.slice(1);
+                subjectSelect.appendChild(option);
+            });
+
+            subjectGroup.appendChild(subjectLabel);
+            subjectGroup.appendChild(subjectSelect);
+
+            // Description field
+            const descriptionGroup = document.createElement('div');
+            descriptionGroup.className = 'form-group';
+
+            const descriptionLabel = document.createElement('label');
+            descriptionLabel.textContent = 'Descrizione';
+            descriptionLabel.className = 'form-label';
+
+            const descriptionInput = document.createElement('textarea');
+            descriptionInput.className = 'form-input';
+            descriptionInput.placeholder = 'Descrivi i compiti...';
+            descriptionInput.rows = 4;
+
+            descriptionGroup.appendChild(descriptionLabel);
+            descriptionGroup.appendChild(descriptionInput);
+
+            // Buttons
+            const buttonGroup = document.createElement('div');
+            buttonGroup.style.display = 'flex';
+            buttonGroup.style.gap = '10px';
+            buttonGroup.style.marginTop = '10px';
+
+            const cancelButton = document.createElement('button');
+            cancelButton.type = 'button';
+            cancelButton.className = 'action-button';
+            cancelButton.textContent = 'Annulla';
+            cancelButton.style.flex = '1';
+
+            const saveButton = document.createElement('button');
+            saveButton.type = 'submit';
+            saveButton.className = 'action-button primary';
+            saveButton.textContent = 'Salva';
+            saveButton.style.flex = '2';
+
+            buttonGroup.appendChild(cancelButton);
+            buttonGroup.appendChild(saveButton);
+
+            // Add all elements to form
+            form.appendChild(dateGroup);
+            form.appendChild(subjectGroup);
+            form.appendChild(descriptionGroup);
+            form.appendChild(buttonGroup);
+
+            // Add form to modal
+            modalContent.appendChild(modalTitle);
+            modalContent.appendChild(form);
+            modal.appendChild(modalContent);
+
+            // Add modal to body
+            document.body.appendChild(modal);
+
+            // Event listeners
+            cancelButton.addEventListener('click', () => {
+                document.body.removeChild(modal);
+            });
+
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+
+                // Validate
+                if (!dateInput.value || !descriptionInput.value.trim()) {
+                    window.showNotification('Tutti i campi sono obbligatori', 'error');
+                    return;
+                }
+
+                // Create new homework
+                const newId = homeworkData.length > 0 ? Math.max(...homeworkData.map(h => h.id)) + 1 : 1;
+
+                const newHomework = {
+                    id: newId,
+                    date: dateInput.value,
+                    subject: subjectSelect.value,
+                    description: descriptionInput.value.trim(),
+                    added_by: userData.initials
+                };
+
+                // Add to data
+                homeworkData.push(newHomework);
+
+                // Save data
+                saveData();
+
+                // Update UI
+                populateCalendar();
+
+                // Close modal
+                document.body.removeChild(modal);
+
+                // Show notification
+                window.showNotification('Compito aggiunto con successo!', 'success');
             });
         }
 
-        // Handle adding a new lesson
-        function handleAddLesson() {
-            const title = prompt('Inserisci il titolo della lezione:');
-            if (!title) return;
-            
-            const content = prompt('Inserisci il contenuto della lezione:');
-            if (!content) return;
-            
-            const newId = lessonsData.length > 0 ? Math.max(...lessonsData.map(l => l.id)) + 1 : 1;
-            
-            const newLesson = {
-                id: newId,
-                title: title,
-                content: content
-            };
-            
-            lessonsData.push(newLesson);
-            populateLessons();
-            saveData();
-        }
+        // Delete homework
+        function deleteHomework(homeworkId) {
+            if (!confirm('Sei sicuro di voler eliminare questo compito?')) return;
 
-        // Edit an existing lesson
-        function editLesson(lessonId) {
-            const lesson = lessonsData.find(l => l.id === lessonId);
-            if (!lesson) return;
-            
-            const title = prompt('Modifica il titolo della lezione:', lesson.title);
-            if (!title) return;
-            
-            const content = prompt('Modifica il contenuto della lezione:', lesson.content);
-            if (!content) return;
-            
-            lesson.title = title;
-            lesson.content = content;
-            
-            populateLessons();
+            homeworkData = homeworkData.filter(h => h.id !== homeworkId);
             saveData();
-        }
+            populateCalendar();
 
-        // Delete a lesson
-        function deleteLesson(lessonId) {
-            if (!confirm('Sei sicuro di voler eliminare questa lezione?')) return;
-            
-            lessonsData = lessonsData.filter(l => l.id !== lessonId);
-            populateLessons();
-            saveData();
+            window.showNotification('Compito eliminato con successo!', 'success');
         }
 
         // Save data to JSON file
@@ -1214,21 +1615,181 @@
             const data = {
                 password: classPassword,
                 students: studentsData,
-                lessons: lessonsData
+                homework: homeworkData
             };
-            
+
             // In a real application, this would send data to the server
             // For this demo, we'll just log it
             console.log('Saving data:', data);
-            
+
             // Simulate saving to server
             setTimeout(() => {
                 console.log('Data saved successfully');
+                window.showNotification('Dati salvati con successo!', 'success');
             }, 500);
         }
 
-        // Handle push to GitHub button
+        // Handle push to GitHub button - show admin menu
         function handlePushToGithub() {
+            // Check if we have saved GitHub credentials
+            const savedGithubConfig = localStorage.getItem('githubConfig');
+            let githubConfig = savedGithubConfig ? JSON.parse(savedGithubConfig) : {
+                username: '',
+                repo: '',
+                token: ''
+            };
+
+            // Create modal
+            const modal = document.createElement('div');
+            modal.style.position = 'fixed';
+            modal.style.top = '0';
+            modal.style.left = '0';
+            modal.style.width = '100%';
+            modal.style.height = '100%';
+            modal.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+            modal.style.display = 'flex';
+            modal.style.alignItems = 'center';
+            modal.style.justifyContent = 'center';
+            modal.style.zIndex = '9999';
+
+            const modalContent = document.createElement('div');
+            modalContent.style.backgroundColor = 'var(--card-bg)';
+            modalContent.style.padding = '30px';
+            modalContent.style.borderRadius = '10px';
+            modalContent.style.width = '90%';
+            modalContent.style.maxWidth = '500px';
+
+            const modalTitle = document.createElement('h2');
+            modalTitle.textContent = 'Configurazione GitHub';
+            modalTitle.style.marginBottom = '20px';
+            modalTitle.style.textAlign = 'center';
+
+            const form = document.createElement('form');
+            form.style.display = 'flex';
+            form.style.flexDirection = 'column';
+            form.style.gap = '15px';
+
+            // Username field
+            const usernameGroup = document.createElement('div');
+            usernameGroup.className = 'form-group';
+
+            const usernameLabel = document.createElement('label');
+            usernameLabel.textContent = 'Nome Utente GitHub';
+            usernameLabel.className = 'form-label';
+
+            const usernameInput = document.createElement('input');
+            usernameInput.type = 'text';
+            usernameInput.className = 'form-input';
+            usernameInput.placeholder = 'es. NotDevNoob';
+            usernameInput.value = githubConfig.username;
+
+            usernameGroup.appendChild(usernameLabel);
+            usernameGroup.appendChild(usernameInput);
+
+            // Repository field
+            const repoGroup = document.createElement('div');
+            repoGroup.className = 'form-group';
+
+            const repoLabel = document.createElement('label');
+            repoLabel.textContent = 'Nome Repository';
+            repoLabel.className = 'form-label';
+
+            const repoInput = document.createElement('input');
+            repoInput.type = 'text';
+            repoInput.className = 'form-input';
+            repoInput.placeholder = 'es. class-dashboard';
+            repoInput.value = githubConfig.repo;
+
+            repoGroup.appendChild(repoLabel);
+            repoGroup.appendChild(repoInput);
+
+            // Token field
+            const tokenGroup = document.createElement('div');
+            tokenGroup.className = 'form-group';
+
+            const tokenLabel = document.createElement('label');
+            tokenLabel.textContent = 'Token GitHub';
+            tokenLabel.className = 'form-label';
+
+            const tokenInput = document.createElement('input');
+            tokenInput.type = 'password';
+            tokenInput.className = 'form-input';
+            tokenInput.placeholder = 'Inserisci il tuo token GitHub';
+            tokenInput.value = githubConfig.token;
+
+            tokenGroup.appendChild(tokenLabel);
+            tokenGroup.appendChild(tokenInput);
+
+            // Buttons
+            const buttonGroup = document.createElement('div');
+            buttonGroup.style.display = 'flex';
+            buttonGroup.style.gap = '10px';
+            buttonGroup.style.marginTop = '10px';
+
+            const cancelButton = document.createElement('button');
+            cancelButton.type = 'button';
+            cancelButton.className = 'action-button';
+            cancelButton.textContent = 'Annulla';
+            cancelButton.style.flex = '1';
+
+            const saveButton = document.createElement('button');
+            saveButton.type = 'submit';
+            saveButton.className = 'action-button primary';
+            saveButton.textContent = 'Salva e Pubblica';
+            saveButton.style.flex = '2';
+
+            buttonGroup.appendChild(cancelButton);
+            buttonGroup.appendChild(saveButton);
+
+            // Add all elements to form
+            form.appendChild(usernameGroup);
+            form.appendChild(repoGroup);
+            form.appendChild(tokenGroup);
+            form.appendChild(buttonGroup);
+
+            // Add form to modal
+            modalContent.appendChild(modalTitle);
+            modalContent.appendChild(form);
+            modal.appendChild(modalContent);
+
+            // Add modal to body
+            document.body.appendChild(modal);
+
+            // Event listeners
+            cancelButton.addEventListener('click', () => {
+                document.body.removeChild(modal);
+            });
+
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+
+                // Save config
+                const newConfig = {
+                    username: usernameInput.value.trim(),
+                    repo: repoInput.value.trim(),
+                    token: tokenInput.value.trim()
+                };
+
+                // Validate
+                if (!newConfig.username || !newConfig.repo || !newConfig.token) {
+                    window.showNotification('Tutti i campi sono obbligatori', 'error');
+                    return;
+                }
+
+                // Save to localStorage
+                localStorage.setItem('githubConfig', JSON.stringify(newConfig));
+
+                // Remove modal
+                document.body.removeChild(modal);
+
+                // Show loading
+                pushToGitHub(newConfig);
+            });
+        }
+
+        // Actually push to GitHub
+        function pushToGitHub(config) {
+            // Create loading modal
             const loadingModal = document.createElement('div');
             loadingModal.style.position = 'fixed';
             loadingModal.style.top = '0';
@@ -1254,7 +1815,7 @@
             loadingIcon.style.color = 'var(--primary)';
 
             const loadingText = document.createElement('div');
-            loadingText.textContent = 'Pushing changes to GitHub...';
+            loadingText.textContent = 'Pubblicazione su GitHub in corso...';
             loadingText.style.fontSize = '1.2rem';
 
             loadingContent.appendChild(loadingIcon);
@@ -1262,13 +1823,23 @@
             loadingModal.appendChild(loadingContent);
             document.body.appendChild(loadingModal);
 
-            // Simulate GitHub API call with token
-            console.log('Using GitHub token:', githubToken);
+            // Prepare data
+            const data = {
+                password: classPassword,
+                students: studentsData,
+                homework: homeworkData
+            };
 
-            // In a real application, this would use the GitHub API with the token
+            // In a real application, this would use the GitHub API
+            // For this demo, we'll simulate the API call
+            console.log('Pushing to GitHub with config:', config);
+            console.log('Data being pushed:', data);
+
+            // Simulate API call
             setTimeout(() => {
                 document.body.removeChild(loadingModal);
 
+                // Show success modal
                 const successModal = document.createElement('div');
                 successModal.style.position = 'fixed';
                 successModal.style.top = '0';
@@ -1294,12 +1865,12 @@
                 successIcon.style.color = 'var(--success)';
 
                 const successText = document.createElement('div');
-                successText.textContent = 'Changes pushed to GitHub successfully!';
+                successText.innerHTML = `Dati pubblicati con successo su GitHub!<br>Repository: <strong>${config.username}/${config.repo}</strong>`;
                 successText.style.fontSize = '1.2rem';
                 successText.style.marginBottom = '15px';
 
                 const closeButton = document.createElement('button');
-                closeButton.textContent = 'Close';
+                closeButton.textContent = 'Chiudi';
                 closeButton.className = 'action-button primary';
                 closeButton.onclick = () => document.body.removeChild(successModal);
 
@@ -1308,6 +1879,9 @@
                 successContent.appendChild(closeButton);
                 successModal.appendChild(successContent);
                 document.body.appendChild(successModal);
+
+                // Show notification
+                window.showNotification('Dati pubblicati su GitHub con successo!', 'success');
             }, 2000);
         }
 
@@ -1339,130 +1913,34 @@
             });
         }
 
-        // Add attendance tracking feature
-        function addAttendanceFeature() {
-            // Create attendance tab content
-            const attendanceTab = document.createElement('div');
-            attendanceTab.id = 'attendance-tab';
-            attendanceTab.className = 'tab-content';
+        // Add CSS variables for calendar
+        function addCalendarStyles() {
+            // Add RGB versions of colors for transparency
+            const style = document.createElement('style');
+            style.textContent = `
+                :root {
+                    --warning-rgb: 234, 179, 8;
+                    --success-rgb: 34, 197, 94;
+                    --danger-rgb: 239, 68, 68;
+                    --primary-rgb: 79, 70, 229;
+                }
 
-            const header = document.createElement('div');
-            header.className = 'header';
+                body.light-theme {
+                    --warning-rgb: 234, 179, 8;
+                    --success-rgb: 22, 163, 74;
+                    --danger-rgb: 220, 38, 38;
+                    --primary-rgb: 79, 70, 229;
+                }
 
-            const headerTitle = document.createElement('h1');
-            headerTitle.className = 'header-title';
-            headerTitle.textContent = 'Registro Presenze';
+                .homework-card {
+                    transition: transform 0.2s ease;
+                }
 
-            const headerActions = document.createElement('div');
-            headerActions.className = 'header-actions';
-
-            const dateSelector = document.createElement('input');
-            dateSelector.type = 'date';
-            dateSelector.className = 'form-input';
-            dateSelector.style.marginRight = '10px';
-            dateSelector.valueAsDate = new Date();
-
-            headerActions.appendChild(dateSelector);
-            header.appendChild(headerTitle);
-            header.appendChild(headerActions);
-
-            const card = document.createElement('div');
-            card.className = 'card';
-
-            const cardTitle = document.createElement('h2');
-            cardTitle.className = 'card-title';
-            cardTitle.textContent = 'Presenze del Giorno';
-
-            const attendanceList = document.createElement('div');
-            attendanceList.className = 'student-list';
-            attendanceList.id = 'attendance-list';
-
-            card.appendChild(cardTitle);
-            card.appendChild(attendanceList);
-
-            attendanceTab.appendChild(header);
-            attendanceTab.appendChild(card);
-
-            // Add to main content
-            document.querySelector('.container').appendChild(attendanceTab);
-
-            // Add nav item
-            const navItems = document.querySelector('.nav-items');
-            const attendanceNavItem = document.createElement('li');
-            attendanceNavItem.className = 'nav-item';
-            attendanceNavItem.setAttribute('data-tab', 'attendance');
-            attendanceNavItem.innerHTML = '<i class="fas fa-calendar-check"></i><span class="nav-item-text">Presenze</span>';
-
-            // Insert before admin panel
-            const adminPanel = document.getElementById('admin-panel');
-            navItems.insertBefore(attendanceNavItem, adminPanel);
-
-            // Add event listener
-            attendanceNavItem.addEventListener('click', () => {
-                const tabId = attendanceNavItem.getAttribute('data-tab');
-                switchTab(tabId);
-                populateAttendanceList();
-            });
-
-            // Function to populate attendance list
-            function populateAttendanceList() {
-                const attendanceList = document.getElementById('attendance-list');
-                attendanceList.innerHTML = '';
-
-                studentsData.forEach(student => {
-                    const card = document.createElement('div');
-                    card.className = 'student-card';
-
-                    const avatar = document.createElement('div');
-                    avatar.className = 'student-avatar';
-                    avatar.textContent = student.name.charAt(0);
-
-                    const details = document.createElement('div');
-                    details.className = 'student-details';
-
-                    const name = document.createElement('div');
-                    name.className = 'student-name';
-                    name.textContent = student.name;
-
-                    details.appendChild(name);
-
-                    const attendanceControl = document.createElement('div');
-                    attendanceControl.style.display = 'flex';
-                    attendanceControl.style.gap = '10px';
-                    attendanceControl.style.marginLeft = 'auto';
-
-                    const presentButton = document.createElement('button');
-                    presentButton.className = 'action-button';
-                    presentButton.innerHTML = '<i class="fas fa-check"></i>';
-                    presentButton.style.backgroundColor = 'var(--success)';
-                    presentButton.style.color = 'white';
-
-                    const absentButton = document.createElement('button');
-                    absentButton.className = 'action-button';
-                    absentButton.innerHTML = '<i class="fas fa-times"></i>';
-                    absentButton.style.backgroundColor = 'var(--danger)';
-                    absentButton.style.color = 'white';
-
-                    const lateButton = document.createElement('button');
-                    lateButton.className = 'action-button';
-                    lateButton.innerHTML = '<i class="fas fa-clock"></i>';
-                    lateButton.style.backgroundColor = 'var(--warning)';
-                    lateButton.style.color = 'white';
-
-                    attendanceControl.appendChild(presentButton);
-                    attendanceControl.appendChild(lateButton);
-                    attendanceControl.appendChild(absentButton);
-
-                    card.appendChild(avatar);
-                    card.appendChild(details);
-                    card.appendChild(attendanceControl);
-
-                    attendanceList.appendChild(card);
-                });
-            }
-
-            // Add date change listener
-            dateSelector.addEventListener('change', populateAttendanceList);
+                .homework-card:hover {
+                    transform: translateY(-2px);
+                }
+            `;
+            document.head.appendChild(style);
         }
 
         // Add dark mode toggle
@@ -1690,10 +2168,9 @@
         document.addEventListener('DOMContentLoaded', () => {
             initApp();
             setupMobileNavigation();
-            addAttendanceFeature();
             addDarkModeToggle();
             addNotificationSystem();
-            addCalendarFeature();
+            addCalendarStyles();
         });
     </script>
 </body>
