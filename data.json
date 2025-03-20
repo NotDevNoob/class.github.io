@@ -1,32 +1,158 @@
 {
   "password": "canonica1g",
   "students": [
-    {"id": 2, "initials": "A.A.", "role": "controllore", "cartellino": "verde"},
-    {"id": 3, "initials": "B.G.", "role": "student", "cartellino": "verde"},
-    {"id": 4, "initials": "B.G.", "role": "student", "cartellino": "verde"},
-    {"id": 5, "initials": "B.N.", "role": "student", "cartellino": "verde"},
-    {"id": 6, "initials": "C.E.", "role": "student", "cartellino": "verde"},
-    {"id": 7, "initials": "C.F.", "role": "student", "cartellino": "verde"},
-    {"id": 8, "initials": "F.C.M.V.", "role": "student", "cartellino": "verde"},
-    {"id": 9, "initials": "F.M.", "role": "student", "cartellino": "verde"},
-    {"id": 10, "initials": "G.D.L.G.", "role": "student", "cartellino": "verde"},
-    {"id": 11, "initials": "L.L.", "role": "student", "cartellino": "verde"},
-    {"id": 12, "initials": "M.A.", "role": "controllore", "cartellino": "verde"},
-    {"id": 13, "initials": "M.V.", "role": "controllore", "cartellino": "verde"},
-    {"id": 14, "initials": "M.M.", "role": "student", "cartellino": "verde"},
-    {"id": 15, "initials": "N.L.", "role": "student", "cartellino": "verde"},
-    {"id": 16, "initials": "P.L.L.", "role": "student", "cartellino": "verde"},
-    {"id": 17, "initials": "P.A.", "role": "student", "cartellino": "verde"},
-    {"id": 18, "initials": "P.S.", "role": "student", "cartellino": "verde"},
-    {"id": 19, "initials": "S.B.", "role": "student", "cartellino": "verde"},
-    {"id": 20, "initials": "S.S.", "role": "student", "cartellino": "verde"},
-    {"id": 21, "initials": "S.A.", "role": "student", "cartellino": "verde"},
-    {"id": 22, "initials": "I.V.", "role": "student", "cartellino": "verde"},
-    {"id": 23, "initials": "G.Z.", "role": "student", "cartellino": "verde"},
-    {"id": 24, "initials": "L.G.", "role": "student", "cartellino": "verde"},
-    {"id": 25, "initials": "L.E.A.", "role": "student", "cartellino": "verde"}
+    {
+      "id": 2,
+      "initials": "A.A.",
+      "role": "controllore",
+      "cartellino": "verde"
+    },
+    {
+      "id": 3,
+      "initials": "B.G.",
+      "role": "student",
+      "cartellino": "verde"
+    },
+    {
+      "id": 4,
+      "initials": "B.G.",
+      "role": "student",
+      "cartellino": "verde"
+    },
+    {
+      "id": 5,
+      "initials": "B.N.",
+      "role": "student",
+      "cartellino": "rosso"
+    },
+    {
+      "id": 6,
+      "initials": "C.E.",
+      "role": "student",
+      "cartellino": "verde"
+    },
+    {
+      "id": 7,
+      "initials": "C.F.",
+      "role": "student",
+      "cartellino": "verde"
+    },
+    {
+      "id": 8,
+      "initials": "F.C.M.V.",
+      "role": "student",
+      "cartellino": "verde"
+    },
+    {
+      "id": 9,
+      "initials": "F.M.",
+      "role": "student",
+      "cartellino": "verde"
+    },
+    {
+      "id": 10,
+      "initials": "G.D.L.G.",
+      "role": "student",
+      "cartellino": "verde"
+    },
+    {
+      "id": 11,
+      "initials": "L.L.",
+      "role": "student",
+      "cartellino": "verde"
+    },
+    {
+      "id": 12,
+      "initials": "M.A.",
+      "role": "controllore",
+      "cartellino": "verde"
+    },
+    {
+      "id": 13,
+      "initials": "M.V.",
+      "role": "controllore",
+      "cartellino": "verde"
+    },
+    {
+      "id": 14,
+      "initials": "M.M.",
+      "role": "student",
+      "cartellino": "verde"
+    },
+    {
+      "id": 15,
+      "initials": "N.L.",
+      "role": "student",
+      "cartellino": "verde"
+    },
+    {
+      "id": 16,
+      "initials": "P.L.L.",
+      "role": "student",
+      "cartellino": "verde"
+    },
+    {
+      "id": 17,
+      "initials": "P.A.",
+      "role": "student",
+      "cartellino": "verde"
+    },
+    {
+      "id": 18,
+      "initials": "P.S.",
+      "role": "student",
+      "cartellino": "verde"
+    },
+    {
+      "id": 19,
+      "initials": "S.B.",
+      "role": "student",
+      "cartellino": "verde"
+    },
+    {
+      "id": 20,
+      "initials": "S.S.",
+      "role": "student",
+      "cartellino": "verde"
+    },
+    {
+      "id": 21,
+      "initials": "S.A.",
+      "role": "student",
+      "cartellino": "verde"
+    },
+    {
+      "id": 22,
+      "initials": "I.V.",
+      "role": "student",
+      "cartellino": "verde"
+    },
+    {
+      "id": 23,
+      "initials": "G.Z.",
+      "role": "student",
+      "cartellino": "verde"
+    },
+    {
+      "id": 24,
+      "initials": "L.G.",
+      "role": "student",
+      "cartellino": "giallo"
+    },
+    {
+      "id": 25,
+      "initials": "L.E.A.",
+      "role": "student",
+      "cartellino": "verde"
+    }
   ],
   "homework": [
-    {"id": 1, "subject": "matematica", "date": "2023-11-15", "description": "Esercizi pag. 45-46", "added_by": "M.A."}
+    {
+      "id": 1,
+      "subject": "matematica",
+      "date": "2023-11-15",
+      "description": "Esercizi pag. 45-46",
+      "added_by": "M.A."
+    }
   ]
 }
