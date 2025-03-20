@@ -1997,8 +1997,15 @@
             loadingText.textContent = 'Pubblicazione su GitHub in corso...';
             loadingText.style.fontSize = '1.2rem';
 
+            const loadingStatus = document.createElement('div');
+            loadingStatus.style.fontSize = '0.9rem';
+            loadingStatus.style.marginTop = '10px';
+            loadingStatus.style.color = 'rgba(255, 255, 255, 0.7)';
+            loadingStatus.textContent = 'Preparazione dati...';
+
             loadingContent.appendChild(loadingIcon);
             loadingContent.appendChild(loadingText);
+            loadingContent.appendChild(loadingStatus);
             loadingModal.appendChild(loadingContent);
             document.body.appendChild(loadingModal);
 
@@ -2009,13 +2016,67 @@
                 homework: homeworkData
             };
 
-            // In a real application, this would use the GitHub API
-            // For this demo, we'll simulate the API call
-            console.log('Pushing to GitHub with config:', config);
-            console.log('Data being pushed:', data);
+            // Convert data to JSON string
+            const jsonData = JSON.stringify(data, null, 2);
 
-            // Simulate API call
-            setTimeout(() => {
+            // Now we'll use the GitHub API to update the data.json file
+            // First, we need to get the current file's SHA
+            updateLoadingStatus('Connessione a GitHub API...');
+
+            // GitHub API URLs
+            const apiBaseUrl = 'https://api.github.com';
+            const repoUrl = `${apiBaseUrl}/repos/${config.username}/${config.repo}`;
+            const contentUrl = `${repoUrl}/contents/data.json`;
+
+            // Step 1: Get the current file's SHA (if it exists)
+            fetch(contentUrl, {
+                headers: {
+                    'Authorization': `token ${config.token}`,
+                    'Accept': 'application/vnd.github.v3+json'
+                }
+            })
+            .then(response => {
+                if (response.status === 404) {
+                    // File doesn't exist yet, create it
+                    return { sha: null };
+                } else if (!response.ok) {
+                    throw new Error(`GitHub API error: ${response.status} ${response.statusText}`);
+                }
+                return response.json();
+            })
+            .then(fileInfo => {
+                updateLoadingStatus('Aggiornamento file data.json...');
+
+                // Step 2: Update or create the file
+                const updateData = {
+                    message: 'Aggiornamento data.json dalla dashboard',
+                    content: btoa(unescape(encodeURIComponent(jsonData))), // Base64 encode the content
+                    branch: 'main' // or 'master' depending on your repository
+                };
+
+                // If we have a SHA, it means the file exists and we're updating it
+                if (fileInfo.sha) {
+                    updateData.sha = fileInfo.sha;
+                }
+
+                return fetch(contentUrl, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `token ${config.token}`,
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/vnd.github.v3+json'
+                    },
+                    body: JSON.stringify(updateData)
+                });
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`GitHub API error: ${response.status} ${response.statusText}`);
+                }
+                return response.json();
+            })
+            .then(result => {
+                // Success! The file was updated
                 document.body.removeChild(loadingModal);
 
                 // Show success modal
@@ -2048,6 +2109,15 @@
                 successText.style.fontSize = '1.2rem';
                 successText.style.marginBottom = '15px';
 
+                // Add link to the file
+                const fileLink = document.createElement('a');
+                fileLink.href = `https://github.com/${config.username}/${config.repo}/blob/main/data.json`;
+                fileLink.target = '_blank';
+                fileLink.textContent = 'Visualizza file su GitHub';
+                fileLink.style.display = 'block';
+                fileLink.style.marginBottom = '15px';
+                fileLink.style.color = 'var(--primary-light)';
+
                 const closeButton = document.createElement('button');
                 closeButton.textContent = 'Chiudi';
                 closeButton.className = 'action-button primary';
@@ -2055,13 +2125,76 @@
 
                 successContent.appendChild(successIcon);
                 successContent.appendChild(successText);
+                successContent.appendChild(fileLink);
                 successContent.appendChild(closeButton);
                 successModal.appendChild(successContent);
                 document.body.appendChild(successModal);
 
                 // Show notification
                 window.showNotification('Dati pubblicati su GitHub con successo!', 'success');
-            }, 2000);
+            })
+            .catch(error => {
+                // Handle errors
+                document.body.removeChild(loadingModal);
+
+                console.error('GitHub API error:', error);
+
+                // Show error modal
+                const errorModal = document.createElement('div');
+                errorModal.style.position = 'fixed';
+                errorModal.style.top = '0';
+                errorModal.style.left = '0';
+                errorModal.style.width = '100%';
+                errorModal.style.height = '100%';
+                errorModal.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+                errorModal.style.display = 'flex';
+                errorModal.style.alignItems = 'center';
+                errorModal.style.justifyContent = 'center';
+                errorModal.style.zIndex = '9999';
+
+                const errorContent = document.createElement('div');
+                errorContent.style.backgroundColor = 'var(--card-bg)';
+                errorContent.style.padding = '20px';
+                errorContent.style.borderRadius = '10px';
+                errorContent.style.textAlign = 'center';
+
+                const errorIcon = document.createElement('i');
+                errorIcon.className = 'fas fa-exclamation-circle';
+                errorIcon.style.fontSize = '3rem';
+                errorIcon.style.marginBottom = '15px';
+                errorIcon.style.color = 'var(--danger)';
+
+                const errorText = document.createElement('div');
+                errorText.textContent = 'Errore durante la pubblicazione su GitHub';
+                errorText.style.fontSize = '1.2rem';
+                errorText.style.marginBottom = '15px';
+
+                const errorDetails = document.createElement('div');
+                errorDetails.textContent = error.message;
+                errorDetails.style.fontSize = '0.9rem';
+                errorDetails.style.marginBottom = '15px';
+                errorDetails.style.color = 'rgba(255, 255, 255, 0.7)';
+
+                const closeButton = document.createElement('button');
+                closeButton.textContent = 'Chiudi';
+                closeButton.className = 'action-button primary';
+                closeButton.onclick = () => document.body.removeChild(errorModal);
+
+                errorContent.appendChild(errorIcon);
+                errorContent.appendChild(errorText);
+                errorContent.appendChild(errorDetails);
+                errorContent.appendChild(closeButton);
+                errorModal.appendChild(errorContent);
+                document.body.appendChild(errorModal);
+
+                // Show notification
+                window.showNotification('Errore durante la pubblicazione su GitHub', 'error');
+            });
+
+            // Helper function to update the loading status
+            function updateLoadingStatus(status) {
+                loadingStatus.textContent = status;
+            }
         }
 
         // Toggle sidebar on mobile
