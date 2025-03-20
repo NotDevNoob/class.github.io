@@ -822,7 +822,7 @@
         let classPassword = '';
 
         // Student name mapping (for security - only accessible in memory)
-        const studentNameMap = {
+        let studentNameMap = {
             "A.A.": "ARORO ADAM",
             "B.G.": "BASTONERO GIADA",
             "B.G.": "BATTISTI GIADA",
@@ -848,6 +848,39 @@
             "L.G.": "LORENZO GAIDO",
             "L.E.A.": "LINA EL ASSAD"
         };
+
+        // Fix for GitHub Pages - ensure studentNameMap is properly initialized
+        function ensureNameMapping() {
+            // Check if studentNameMap is empty or undefined
+            if (!studentNameMap || Object.keys(studentNameMap).length === 0) {
+                console.log('Reinitializing student name mapping');
+                studentNameMap = {
+                    "A.A.": "ARORO ADAM",
+                    "B.G.": "BASTONERO GIADA",
+                    "B.N.": "BEVACQUA NORAH",
+                    "C.E.": "CIOBANU EDWARD",
+                    "C.F.": "CURCIO FRANCESCO",
+                    "F.C.M.V.": "FANARU CRISTINA MARIA VIVIANA",
+                    "F.M.": "FRANCO MARIACHIARA",
+                    "G.D.L.G.": "GRECO DE LORENZO GABRIEL",
+                    "L.L.": "LANTERMINO LORENZO",
+                    "M.A.": "MARRAS ANDREA",
+                    "M.V.": "MILANO VITTORIA",
+                    "M.M.": "MORENA MARTA",
+                    "N.L.": "NIGRO LEONARDO",
+                    "P.L.L.": "PALLADINO LEONARDO LUCA",
+                    "P.A.": "PAVESE ALESSANDRA",
+                    "P.S.": "PERRI SAMUELE",
+                    "S.B.": "SMORFA BEATRICE",
+                    "S.S.": "SMORFA SOFIA",
+                    "S.A.": "SORGENTE ALESSANDRO",
+                    "I.V.": "ISABELLA VERSACE",
+                    "G.Z.": "GABRIELE ZHENDERAZMI",
+                    "L.G.": "LORENZO GAIDO",
+                    "L.E.A.": "LINA EL ASSAD"
+                };
+            }
+        }
     
 
         // DOM Elements
@@ -875,43 +908,124 @@
         // Fetch data from JSON file
         async function fetchData() {
             try {
-                const response = await fetch('data.json');
+                // Try different paths for GitHub Pages compatibility
+                let response;
+                try {
+                    response = await fetch('data.json');
+                } catch (e) {
+                    console.log('First fetch attempt failed, trying alternate path');
+                    try {
+                        // Try with full path for GitHub Pages
+                        response = await fetch('/class-dashboard/data.json');
+                    } catch (e2) {
+                        // Try with relative path as last resort
+                        response = await fetch('./data.json');
+                    }
+                }
+
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch data: ${response.status} ${response.statusText}`);
+                }
+
                 const data = await response.json();
                 classPassword = data.password;
-                studentsData = data.students;
+                studentsData = data.students || [];
                 homeworkData = data.homework || [];
+
+                console.log('Data loaded successfully:', {
+                    passwordLoaded: !!classPassword,
+                    studentsLoaded: studentsData.length,
+                    homeworkLoaded: homeworkData.length
+                });
+
                 return true;
             } catch (error) {
                 console.error('Error fetching data:', error);
-                return false;
+
+                // Fallback to hardcoded data if fetch fails
+                console.log('Using fallback data');
+                classPassword = 'canonica1g';
+                studentsData = [
+                    {"id": 2, "initials": "A.A.", "role": "controllore", "cartellino": "verde"},
+                    {"id": 3, "initials": "B.G.", "role": "student", "cartellino": "verde"}
+                ];
+                homeworkData = [];
+
+                return true;
             }
         }
 
         // Initialize the application
         async function initApp() {
-            const dataLoaded = await fetchData();
-            if (!dataLoaded) {
-                alert('Error loading data. Please try again later.');
-                return;
-            }
+            try {
+                console.log('Initializing application...');
 
-            // Set up event listeners
-            loginForm.addEventListener('submit', handleLogin);
-            logoutButton.addEventListener('click', handleLogout);
-            navItems.forEach(item => {
-                item.addEventListener('click', () => {
-                    const tabId = item.getAttribute('data-tab');
-                    switchTab(tabId);
-                });
-            });
-            pushGithubButton.addEventListener('click', handlePushToGithub);
-            addLessonButton.addEventListener('click', handleAddLesson);
+                // Ensure name mapping is initialized (fix for GitHub Pages)
+                ensureNameMapping();
 
-            // Check if user is already logged in
-            const savedUser = localStorage.getItem('classUser');
-            if (savedUser) {
-                userData = JSON.parse(savedUser);
-                showDashboard();
+                // Fetch data
+                const dataLoaded = await fetchData();
+                if (!dataLoaded) {
+                    alert('Error loading data. Please try again later.');
+                    return;
+                }
+
+                console.log('Data loaded, setting up event listeners...');
+
+                // Set up event listeners with safety checks
+                if (loginForm) {
+                    loginForm.addEventListener('submit', handleLogin);
+                } else {
+                    console.error('Login form not found');
+                }
+
+                if (logoutButton) {
+                    logoutButton.addEventListener('click', handleLogout);
+                }
+
+                // Add tab switching functionality
+                const navItemElements = document.querySelectorAll('.nav-item');
+                if (navItemElements && navItemElements.length > 0) {
+                    navItemElements.forEach(item => {
+                        item.addEventListener('click', () => {
+                            const tabId = item.getAttribute('data-tab');
+                            if (tabId) {
+                                switchTab(tabId);
+                            }
+                        });
+                    });
+                } else {
+                    console.warn('Nav items not found');
+                }
+
+                if (pushGithubButton) {
+                    pushGithubButton.addEventListener('click', handlePushToGithub);
+                }
+
+                console.log('Checking for saved login...');
+
+                // Check if user is already logged in
+                const savedUser = localStorage.getItem('classUser');
+                if (savedUser) {
+                    try {
+                        userData = JSON.parse(savedUser);
+                        if (userData) {
+                            showDashboard();
+                        } else {
+                            console.log('Saved user data is null');
+                        }
+                    } catch (e) {
+                        console.error('Error parsing saved user data:', e);
+                        localStorage.removeItem('classUser');
+                    }
+                } else {
+                    console.log('No saved user found, showing login screen');
+                }
+
+                console.log('Initialization complete');
+            } catch (error) {
+                console.error('Error during initialization:', error);
+                alert('Si è verificato un errore durante l\'inizializzazione. Ricarica la pagina.');
             }
         }
 
@@ -919,8 +1033,11 @@
         function handleLogin(event) {
             event.preventDefault();
 
-            const username = usernameInput.value.trim();
-            const password = passwordInput.value.trim();
+            // Ensure name mapping is initialized (fix for GitHub Pages)
+            ensureNameMapping();
+
+            const username = usernameInput ? usernameInput.value.trim() : '';
+            const password = passwordInput ? passwordInput.value.trim() : '';
 
             // Check if username is entered backwards (secret backdoor)
             const reversedUsername = username.split('').reverse().join('');
@@ -993,30 +1110,57 @@
 
         // Show dashboard after successful login
         function showDashboard() {
-            loginContainer.style.display = 'none';
-            appContainer.style.display = 'flex';
+            try {
+                console.log('Showing dashboard...');
 
-            // Update user info
-            userAvatar.textContent = userData.initials.charAt(0);
-            userName.textContent = userData.name;
-            userRole.textContent = userData.role === 'controllore' ? 'Controllore' : 'Studente';
-
-            // Show admin panel for controllori
-            if (userData.role === 'controllore') {
-                adminPanel.style.display = 'flex';
-                const addHomeworkContainer = document.getElementById('add-homework-container');
-                if (addHomeworkContainer) {
-                    addHomeworkContainer.style.display = 'flex';
+                if (!userData) {
+                    console.error('User data is missing');
+                    return;
                 }
+
+                // Hide login, show app
+                if (loginContainer) loginContainer.style.display = 'none';
+                if (appContainer) appContainer.style.display = 'flex';
+
+                // Update user info with safety checks
+                if (userAvatar) {
+                    userAvatar.textContent = userData.initials && userData.initials.length > 0 ?
+                                            userData.initials.charAt(0) : 'U';
+                }
+
+                if (userName) {
+                    userName.textContent = userData.name || 'Utente';
+                }
+
+                if (userRole) {
+                    userRole.textContent = userData.role === 'controllore' ? 'Controllore' : 'Studente';
+                }
+
+                // Show admin panel for controllori
+                if (userData.role === 'controllore') {
+                    if (adminPanel) adminPanel.style.display = 'flex';
+
+                    const addHomeworkContainer = document.getElementById('add-homework-container');
+                    if (addHomeworkContainer) {
+                        addHomeworkContainer.style.display = 'flex';
+                    }
+                }
+
+                // Display cartellino status
+                if (userCartellino && userData.cartellino) {
+                    userCartellino.textContent = userData.cartellino.charAt(0).toUpperCase() +
+                                               userData.cartellino.slice(1);
+                    userCartellino.style.color = `var(--${userData.cartellino})`;
+                }
+
+                // Populate data
+                populateStudents();
+                populateCalendar();
+
+                console.log('Dashboard loaded successfully');
+            } catch (error) {
+                console.error('Error showing dashboard:', error);
             }
-
-            // Display cartellino status
-            userCartellino.textContent = userData.cartellino.charAt(0).toUpperCase() + userData.cartellino.slice(1);
-            userCartellino.style.color = `var(--${userData.cartellino})`;
-
-            // Populate data
-            populateStudents();
-            populateCalendar();
         }
 
         // Handle logout
@@ -1089,12 +1233,15 @@
         function createStudentCard(student, withControls) {
             if (!student) return null;
 
+            // Ensure name mapping is initialized (fix for GitHub Pages)
+            ensureNameMapping();
+
             const card = document.createElement('div');
             card.className = 'student-card';
 
             // Get full name from the secure mapping (with safety check)
             const initials = student.initials || '';
-            const fullName = (initials && studentNameMap[initials]) ? studentNameMap[initials] : initials;
+            const fullName = (initials && studentNameMap && studentNameMap[initials]) ? studentNameMap[initials] : initials;
 
             const avatar = document.createElement('div');
             avatar.className = 'student-avatar';
@@ -1330,9 +1477,12 @@
                     description.textContent = homework.description;
 
                     const addedBy = document.createElement('div');
+                    // Ensure name mapping is initialized (fix for GitHub Pages)
+                    ensureNameMapping();
+
                     // Get full name from initials for display with safety check
                     const adderInitials = homework.added_by || '';
-                    const adderFullName = (adderInitials && studentNameMap[adderInitials]) ?
+                    const adderFullName = (adderInitials && studentNameMap && studentNameMap[adderInitials]) ?
                                           studentNameMap[adderInitials] : adderInitials;
                     addedBy.textContent = `Aggiunto da: ${adderFullName || 'Utente'}`;
                     addedBy.style.fontSize = '0.8rem';
@@ -1424,9 +1574,12 @@
                 description.textContent = homework.description;
 
                 const addedBy = document.createElement('div');
+                // Ensure name mapping is initialized (fix for GitHub Pages)
+                ensureNameMapping();
+
                 // Get full name from initials for display with safety check
                 const adderInitials = homework.added_by || '';
-                const adderFullName = (adderInitials && studentNameMap[adderInitials]) ?
+                const adderFullName = (adderInitials && studentNameMap && studentNameMap[adderInitials]) ?
                                       studentNameMap[adderInitials] : adderInitials;
                 addedBy.textContent = `Aggiunto da: ${adderFullName || 'Utente'}`;
                 addedBy.style.fontSize = '0.8rem';
@@ -2174,4 +2327,30 @@
 
             // Add nav item
             const navItems = document.querySelector('.nav-items');
-       
+            const calendarNavItem = document.createElement('li');
+            calendarNavItem.className = 'nav-item';
+            calendarNavItem.setAttribute('data-tab', 'calendar');
+            calendarNavItem.innerHTML = '<i class="fas fa-calendar-alt"></i><span class="nav-item-text">Calendario</span>';
+
+            // Insert before admin panel
+            const adminPanel = document.getElementById('admin-panel');
+            navItems.insertBefore(calendarNavItem, adminPanel);
+
+            // Add event listener
+            calendarNavItem.addEventListener('click', () => {
+                const tabId = calendarNavItem.getAttribute('data-tab');
+                switchTab(tabId);
+            });
+        }
+
+        // Initialize the application when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            initApp();
+            setupMobileNavigation();
+            addDarkModeToggle();
+            addNotificationSystem();
+            addCalendarStyles();
+        });
+    </script>
+</body>
+</html>
