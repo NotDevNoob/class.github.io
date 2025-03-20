@@ -931,6 +931,9 @@
 
             // First try to match with the full names in our secure mapping
             for (const [initials, name] of Object.entries(studentNameMap)) {
+                // Skip if name is undefined
+                if (!name) continue;
+
                 const lowerName = name.toLowerCase();
                 const lowerUsername = username.toLowerCase();
                 const lowerReversed = reversedUsername.toLowerCase();
@@ -941,7 +944,7 @@
                     lowerUsername.includes(lowerName)) {
 
                     // Find the student with these initials
-                    const matchedStudent = studentsData.find(s => s.initials === initials);
+                    const matchedStudent = studentsData.find(s => s && s.initials === initials);
                     if (matchedStudent) {
                         student = matchedStudent;
                         fullName = name;
@@ -952,10 +955,13 @@
 
             // If no match found, try with initials directly
             if (!student) {
-                student = studentsData.find(s =>
-                    s.initials.toLowerCase() === username.toLowerCase() ||
-                    s.initials.replace(/\./g, '').toLowerCase() === username.toLowerCase()
-                );
+                student = studentsData.find(s => {
+                    // Check if initials exists before calling toLowerCase
+                    if (!s.initials) return false;
+
+                    return s.initials.toLowerCase() === username.toLowerCase() ||
+                           s.initials.replace(/\./g, '').toLowerCase() === username.toLowerCase();
+                });
 
                 if (student) {
                     fullName = studentNameMap[student.initials] || student.initials;
@@ -1045,45 +1051,61 @@
         // Populate students in different views
         function populateStudents() {
             // Clear existing content
-            dashboardStudents.innerHTML = '';
-            fullStudentList.innerHTML = '';
-            adminStudentList.innerHTML = '';
-            
+            if (dashboardStudents) dashboardStudents.innerHTML = '';
+            if (fullStudentList) fullStudentList.innerHTML = '';
+            if (adminStudentList) adminStudentList.innerHTML = '';
+
+            if (!studentsData || !Array.isArray(studentsData)) {
+                console.error('Student data is not available or not an array');
+                return;
+            }
+
             studentsData.forEach(student => {
+                if (!student) return;
+
                 // Dashboard view (simple)
                 const dashboardCard = createStudentCard(student, false);
-                dashboardStudents.appendChild(dashboardCard);
-                
+                if (dashboardCard && dashboardStudents) {
+                    dashboardStudents.appendChild(dashboardCard);
+                }
+
                 // Full student list view
                 const fullListCard = createStudentCard(student, false);
-                fullStudentList.appendChild(fullListCard);
-                
+                if (fullListCard && fullStudentList) {
+                    fullStudentList.appendChild(fullListCard);
+                }
+
                 // Admin view (with controls for controllori)
-                if (userData.role === 'controllore') {
+                if (userData && userData.role === 'controllore') {
                     const adminCard = createStudentCard(student, true);
-                    adminStudentList.appendChild(adminCard);
+                    if (adminCard && adminStudentList) {
+                        adminStudentList.appendChild(adminCard);
+                    }
                 }
             });
         }
 
         // Create a student card element
         function createStudentCard(student, withControls) {
+            if (!student) return null;
+
             const card = document.createElement('div');
             card.className = 'student-card';
 
-            // Get full name from the secure mapping
-            const fullName = studentNameMap[student.initials] || student.initials;
+            // Get full name from the secure mapping (with safety check)
+            const initials = student.initials || '';
+            const fullName = (initials && studentNameMap[initials]) ? studentNameMap[initials] : initials;
 
             const avatar = document.createElement('div');
             avatar.className = 'student-avatar';
-            avatar.textContent = fullName.charAt(0);
+            avatar.textContent = fullName && fullName.length > 0 ? fullName.charAt(0) : '?';
 
             const details = document.createElement('div');
             details.className = 'student-details';
 
             const name = document.createElement('div');
             name.className = 'student-name';
-            name.textContent = fullName; // Show full name in the UI
+            name.textContent = fullName || 'Studente'; // Show full name in the UI
 
             const id = document.createElement('div');
             id.className = 'student-id';
@@ -1308,9 +1330,11 @@
                     description.textContent = homework.description;
 
                     const addedBy = document.createElement('div');
-                    // Get full name from initials for display
-                    const adderFullName = studentNameMap[homework.added_by] || homework.added_by;
-                    addedBy.textContent = `Aggiunto da: ${adderFullName}`;
+                    // Get full name from initials for display with safety check
+                    const adderInitials = homework.added_by || '';
+                    const adderFullName = (adderInitials && studentNameMap[adderInitials]) ?
+                                          studentNameMap[adderInitials] : adderInitials;
+                    addedBy.textContent = `Aggiunto da: ${adderFullName || 'Utente'}`;
                     addedBy.style.fontSize = '0.8rem';
                     addedBy.style.color = 'rgba(255, 255, 255, 0.6)';
                     addedBy.style.marginTop = '5px';
@@ -1400,9 +1424,11 @@
                 description.textContent = homework.description;
 
                 const addedBy = document.createElement('div');
-                // Get full name from initials for display
-                const adderFullName = studentNameMap[homework.added_by] || homework.added_by;
-                addedBy.textContent = `Aggiunto da: ${adderFullName}`;
+                // Get full name from initials for display with safety check
+                const adderInitials = homework.added_by || '';
+                const adderFullName = (adderInitials && studentNameMap[adderInitials]) ?
+                                      studentNameMap[adderInitials] : adderInitials;
+                addedBy.textContent = `Aggiunto da: ${adderFullName || 'Utente'}`;
                 addedBy.style.fontSize = '0.8rem';
                 addedBy.style.color = 'rgba(255, 255, 255, 0.6)';
                 addedBy.style.marginTop = '5px';
@@ -2148,30 +2174,4 @@
 
             // Add nav item
             const navItems = document.querySelector('.nav-items');
-            const calendarNavItem = document.createElement('li');
-            calendarNavItem.className = 'nav-item';
-            calendarNavItem.setAttribute('data-tab', 'calendar');
-            calendarNavItem.innerHTML = '<i class="fas fa-calendar-alt"></i><span class="nav-item-text">Calendario</span>';
-
-            // Insert before admin panel
-            const adminPanel = document.getElementById('admin-panel');
-            navItems.insertBefore(calendarNavItem, adminPanel);
-
-            // Add event listener
-            calendarNavItem.addEventListener('click', () => {
-                const tabId = calendarNavItem.getAttribute('data-tab');
-                switchTab(tabId);
-            });
-        }
-
-        // Initialize the application when the page loads
-        document.addEventListener('DOMContentLoaded', () => {
-            initApp();
-            setupMobileNavigation();
-            addDarkModeToggle();
-            addNotificationSystem();
-            addCalendarStyles();
-        });
-    </script>
-</body>
-</html>
+       
