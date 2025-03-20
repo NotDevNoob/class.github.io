@@ -1,0 +1,33 @@
+{
+  "password": "canonica1g",
+  "students": [
+    {"id": 2, "name": "ARORO ADAM", "role": "controllore", "cartellino": "verde"},
+    {"id": 3, "name": "BASTONERO GIADA", "role": "student", "cartellino": "verde"},
+    {"id": 4, "name": "BATTISTI GIADA", "role": "student", "cartellino": "verde"},
+    {"id": 5, "name": "BEVACQUA NORAH", "role": "student", "cartellino": "verde"},
+    {"id": 6, "name": "CIOBANU EDWARD", "role": "student", "cartellino": "verde"},
+    {"id": 7, "name": "CURCIO FRANCESCO", "role": "student", "cartellino": "verde"},
+    {"id": 8, "name": "FANARU CRISTINA MARIA VIVIANA", "role": "student", "cartellino": "verde"},
+    {"id": 9, "name": "FRANCO MARIACHIARA", "role": "student", "cartellino": "verde"},
+    {"id": 10, "name": "GRECO DE LORENZO GABRIEL", "role": "student", "cartellino": "verde"},
+    {"id": 11, "name": "LANTERMINO LORENZO", "role": "student", "cartellino": "verde"},
+    {"id": 12, "name": "MARRAS ANDREA", "role": "controllore", "cartellino": "verde"},
+    {"id": 13, "name": "MILANO VITTORIA", "role": "controllore", "cartellino": "verde"},
+    {"id": 14, "name": "MORENA MARTA", "role": "student", "cartellino": "verde"},
+    {"id": 15, "name": "NIGRO LEONARDO", "role": "student", "cartellino": "verde"},
+    {"id": 16, "name": "PALLADINO LEONARDO LUCA", "role": "student", "cartellino": "verde"},
+    {"id": 17, "name": "PAVESE ALESSANDRA", "role": "student", "cartellino": "verde"},
+    {"id": 18, "name": "PERRI SAMUELE", "role": "student", "cartellino": "verde"},
+    {"id": 19, "name": "SMORFA BEATRICE", "role": "student", "cartellino": "verde"},
+    {"id": 20, "name": "SMORFA SOFIA", "role": "student", "cartellino": "verde"},
+    {"id": 21, "name": "SORGENTE ALESSANDRO", "role": "student", "cartellino": "verde"},
+    {"id": 22, "name": "ISABELLA VERSACE", "role": "student", "cartellino": "verde"},
+    {"id": 23, "name": "GABRIELE ZHENDERAZMI", "role": "student", "cartellino": "verde"},
+    {"id": 24, "name": "LORENZO GAIDO", "role": "student", "cartellino": "verde"},
+    {"id": 25, "name": "LINA EL ASSAD", "role": "student", "cartellino": "verde"}
+  ],
+  "lessons": [
+    {"id": 1, "title": "Introduction", "content": "Welcome to the class!"},
+    {"id": 2, "title": "Lesson 1", "content": "This is the first lesson content."}
+  ]
+}

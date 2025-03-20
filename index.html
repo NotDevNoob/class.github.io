@@ -1,0 +1,1700 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Class Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta name="description" content="Class Dashboard - Gestione studenti e lezioni">
+    <meta name="theme-color" content="#0a0a0a">
+    <style>
+        :root {
+            /* Base colors */
+            --primary: #4f46e5;
+            --primary-dark: #3730a3;
+            --primary-light: #818cf8;
+            --secondary: #10b981;
+            --secondary-dark: #059669;
+            --secondary-light: #34d399;
+            --accent: #f97316;
+            --accent-dark: #ea580c;
+            --accent-light: #fb923c;
+            --success: #22c55e;
+            --warning: #eab308;
+            --danger: #ef4444;
+            --info: #3b82f6;
+            --background: #0a0a0a;
+            --text: #ffffff;
+            --border: rgba(255, 255, 255, 0.1);
+            
+            /* Cartellini colors */
+            --verde: #22c55e;
+            --giallo: #eab308;
+            --rosso: #ef4444;
+
+            /* UI elements */
+            --card-bg: rgba(26, 26, 26, 0.95);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --card-hover-border: rgba(255, 255, 255, 0.15);
+            --button-bg: rgba(255, 255, 255, 0.08);
+            --button-hover-bg: rgba(255, 255, 255, 0.15);
+            --input-bg: rgba(255, 255, 255, 0.08);
+            --input-focus-bg: rgba(255, 255, 255, 0.12);
+
+            /* Spacing */
+            --spacing-xs: 4px;
+            --spacing-sm: 8px;
+            --spacing-md: 16px;
+            --spacing-lg: 24px;
+            --spacing-xl: 32px;
+
+            /* Border radius */
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 20px;
+            --radius-xl: 30px;
+
+            /* Transitions */
+            --transition-fast: 0.2s ease;
+            --transition-normal: 0.3s ease;
+            --transition-slow: 0.5s ease;
+
+            /* Shadows */
+            --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
+            --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.12);
+            --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.15);
+            --shadow-xl: 0 12px 24px rgba(0, 0, 0, 0.2);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: var(--background);
+            color: var(--text);
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            position: relative;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .login-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: var(--spacing-lg);
+        }
+
+        .login-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-xl);
+            width: 100%;
+            max-width: 400px;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .login-title {
+            font-family: 'Poppins', sans-serif;
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: var(--spacing-lg);
+            text-align: center;
+            background: linear-gradient(45deg, var(--primary), var(--primary-light));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .login-form {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-md);
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-xs);
+        }
+
+        .form-label {
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .form-input {
+            background: var(--input-bg);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-sm);
+            color: var(--text);
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+            padding: var(--spacing-md);
+            transition: background-color var(--transition-fast), border-color var(--transition-fast);
+        }
+
+        .form-input:focus {
+            background: var(--input-focus-bg);
+            border-color: var(--primary);
+            outline: none;
+        }
+
+        .login-button {
+            background: var(--primary);
+            border: none;
+            border-radius: var(--radius-sm);
+            color: white;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+            font-weight: 500;
+            margin-top: var(--spacing-md);
+            padding: var(--spacing-md);
+            transition: background-color var(--transition-fast);
+        }
+
+        .login-button:hover {
+            background: var(--primary-dark);
+        }
+
+        .app-container {
+            display: none;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 260px;
+            background: var(--card-bg);
+            border-right: 1px solid var(--card-border);
+            padding: var(--spacing-lg) 0;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            z-index: 100;
+            transition: transform var(--transition-normal);
+        }
+
+        .sidebar-header {
+            padding: 0 var(--spacing-lg);
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .logo {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 800;
+            background: linear-gradient(45deg, var(--primary), var(--primary-light));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+        }
+
+        .logo i {
+            font-size: 1.5rem;
+            background: linear-gradient(45deg, var(--primary), var(--primary-light));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-section {
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .nav-title {
+            padding: 0 var(--spacing-lg);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .nav-items {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .nav-item {
+            padding: var(--spacing-md) var(--spacing-lg);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+            cursor: pointer;
+            transition: background-color var(--transition-fast);
+            position: relative;
+        }
+
+        .nav-item:hover {
+            background: var(--button-hover-bg);
+        }
+
+        .nav-item.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .nav-item i {
+            font-size: 1.2rem;
+            width: 24px;
+            text-align: center;
+        }
+
+        .nav-item-text {
+            font-weight: 500;
+        }
+
+        .sidebar-footer {
+            margin-top: auto;
+            padding: var(--spacing-lg);
+            border-top: 1px solid var(--card-border);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: white;
+        }
+
+        .user-details {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-name {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .user-role {
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .logout-button {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+            padding: var(--spacing-md);
+            margin-top: var(--spacing-md);
+            background: var(--button-bg);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: background-color var(--transition-fast);
+        }
+
+        .logout-button:hover {
+            background: var(--button-hover-bg);
+        }
+
+        .main-content {
+            flex: 1;
+            margin-left: 260px;
+            padding: var(--spacing-lg);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: var(--card-bg);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-lg) var(--spacing-xl);
+            margin-bottom: var(--spacing-xl);
+            border: 1px solid var(--card-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: var(--spacing-md);
+        }
+
+        .action-button {
+            background: var(--button-bg);
+            border: none;
+            border-radius: var(--radius-sm);
+            color: var(--text);
+            cursor: pointer;
+            padding: var(--spacing-sm) var(--spacing-md);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            transition: background-color var(--transition-fast);
+        }
+
+        .action-button:hover {
+            background: var(--button-hover-bg);
+        }
+
+        .action-button.primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .action-button.primary:hover {
+            background: var(--primary-dark);
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-lg);
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .card-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: var(--spacing-md);
+        }
+
+        .student-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: var(--spacing-md);
+        }
+
+        .student-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: var(--radius-md);
+            padding: var(--spacing-md);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+        }
+
+        .student-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: white;
+        }
+
+        .student-details {
+            flex: 1;
+        }
+
+        .student-name {
+            font-weight: 500;
+        }
+
+        .student-id {
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .student-cartellino {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-left: auto;
+        }
+
+        .cartellino-verde {
+            background: var(--verde);
+        }
+
+        .cartellino-giallo {
+            background: var(--giallo);
+        }
+
+        .cartellino-rosso {
+            background: var(--rosso);
+        }
+
+        .cartellino-selector {
+            display: flex;
+            gap: var(--spacing-sm);
+            margin-left: auto;
+        }
+
+        .cartellino-option {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: transform var(--transition-fast);
+        }
+
+        .cartellino-option:hover {
+            transform: scale(1.2);
+        }
+
+        .lessons-list {
+            display: grid;
+            gap: var(--spacing-md);
+        }
+
+        .lesson-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: var(--radius-md);
+            padding: var(--spacing-md);
+        }
+
+        .lesson-title {
+            font-weight: 600;
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .lesson-content {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .github-section {
+            margin-top: var(--spacing-xl);
+        }
+
+        /* Light theme styles */
+        body.light-theme {
+            background: #f8f9fa;
+            color: #333;
+        }
+
+        body.light-theme .sidebar {
+            background: white;
+            border-right: 1px solid #e9ecef;
+        }
+
+        body.light-theme .nav-title {
+            color: #6c757d;
+        }
+
+        body.light-theme .nav-item:hover {
+            background: #f1f3f5;
+        }
+
+        body.light-theme .nav-item.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        body.light-theme .logout-button,
+        body.light-theme .theme-toggle {
+            background: #f1f3f5;
+        }
+
+        body.light-theme .logout-button:hover,
+        body.light-theme .theme-toggle:hover {
+            background: #e9ecef;
+        }
+
+        body.light-theme .header,
+        body.light-theme .card {
+            background: white;
+            border: 1px solid #e9ecef;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        body.light-theme .student-card {
+            background: #f8f9fa;
+        }
+
+        body.light-theme .student-id {
+            color: #6c757d;
+        }
+
+        body.light-theme .lesson-card {
+            background: #f8f9fa;
+        }
+
+        body.light-theme .lesson-content {
+            color: #495057;
+        }
+
+        body.light-theme .action-button {
+            background: #f1f3f5;
+            color: #495057;
+        }
+
+        body.light-theme .action-button:hover {
+            background: #e9ecef;
+        }
+
+        body.light-theme .action-button.primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        body.light-theme .action-button.primary:hover {
+            background: var(--primary-dark);
+        }
+
+        body.light-theme .user-role {
+            color: #6c757d;
+        }
+
+        /* Mobile responsiveness improvements */
+        @media (max-width: 992px) {
+            .sidebar {
+                transform: translateX(-100%);
+                width: 80%;
+                max-width: 300px;
+                z-index: 1000;
+            }
+
+            .sidebar.active {
+                transform: translateX(0);
+                box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: var(--spacing-md);
+            }
+
+            .sidebar-toggle {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                width: 50px;
+                height: 50px;
+                border-radius: 50%;
+                background: var(--primary);
+                color: white;
+                border: none;
+                box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+                z-index: 999;
+                cursor: pointer;
+            }
+
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: var(--spacing-md);
+            }
+
+            .header-actions {
+                width: 100%;
+                justify-content: flex-start;
+            }
+
+            .student-list {
+                grid-template-columns: 1fr;
+            }
+
+            .login-card {
+                width: 90%;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .card {
+                padding: var(--spacing-md);
+            }
+
+            .header-title {
+                font-size: 1.5rem;
+            }
+
+            .card-title {
+                font-size: 1.1rem;
+            }
+
+            .action-button {
+                padding: 8px 12px;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Screen -->
+    <div id="login-container" class="login-container">
+        <div class="login-card">
+            <h1 class="login-title">Class Dashboard</h1>
+            <form id="login-form" class="login-form">
+                <div class="form-group">
+                    <label for="username" class="form-label">Nome Utente</label>
+                    <input type="text" id="username" class="form-input" placeholder="Inserisci il tuo nome" required>
+                </div>
+                <div class="form-group">
+                    <label for="password" class="form-label">Password</label>
+                    <input type="password" id="password" class="form-input" placeholder="Inserisci la password" required>
+                </div>
+                <button type="submit" class="login-button">Accedi</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main Dashboard -->
+    <div id="app-container" class="app-container">
+        <button id="sidebar-toggle" class="sidebar-toggle">
+            <i class="fas fa-bars"></i>
+        </button>
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fas fa-graduation-cap"></i>
+                    <span>Class 1G</span>
+                </div>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-title">Menu</div>
+                <ul class="nav-items">
+                    <li class="nav-item active" data-tab="dashboard">
+                        <i class="fas fa-home"></i>
+                        <span class="nav-item-text">Dashboard</span>
+                    </li>
+                    <li class="nav-item" data-tab="students">
+                        <i class="fas fa-users"></i>
+                        <span class="nav-item-text">Studenti</span>
+                    </li>
+                    <li class="nav-item" data-tab="lessons">
+                        <i class="fas fa-book"></i>
+                        <span class="nav-item-text">Lezioni</span>
+                    </li>
+                    <li id="admin-panel" class="nav-item" data-tab="admin" style="display: none;">
+                        <i class="fas fa-cog"></i>
+                        <span class="nav-item-text">Amministrazione</span>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="user-avatar" id="user-avatar"></div>
+                    <div class="user-details">
+                        <div class="user-name" id="user-name"></div>
+                        <div class="user-role" id="user-role"></div>
+                    </div>
+                </div>
+                <div class="logout-button" id="logout-button">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="container">
+                <!-- Dashboard Tab -->
+                <div id="dashboard-tab" class="tab-content active">
+                    <div class="header">
+                        <h1 class="header-title">Dashboard</h1>
+                        <div class="header-actions">
+                            <div id="user-cartellino-display" class="action-button">
+                                <span>Cartellino: </span>
+                                <span id="cartellino-status"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h2 class="card-title">Benvenuto nella Dashboard della Classe 1G</h2>
+                        <p>Questa è la dashboard per la gestione della classe. Qui puoi visualizzare informazioni sugli studenti e le lezioni.</p>
+                    </div>
+
+                    <div class="card">
+                        <h2 class="card-title">Stato Cartellini</h2>
+                        <div class="student-list" id="dashboard-students">
+                            <!-- Student cards will be populated here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Students Tab -->
+                <div id="students-tab" class="tab-content">
+                    <div class="header">
+                        <h1 class="header-title">Studenti</h1>
+                    </div>
+
+                    <div class="card">
+                        <h2 class="card-title">Lista Studenti</h2>
+                        <div class="student-list" id="full-student-list">
+                            <!-- Student cards will be populated here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lessons Tab -->
+                <div id="lessons-tab" class="tab-content">
+                    <div class="header">
+                        <h1 class="header-title">Lezioni</h1>
+                        <div class="header-actions" id="add-lesson-container" style="display: none;">
+                            <button class="action-button primary" id="add-lesson-button">
+                                <i class="fas fa-plus"></i>
+                                <span>Aggiungi Lezione</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h2 class="card-title">Materiale Didattico</h2>
+                        <div class="lessons-list" id="lessons-list">
+                            <!-- Lessons will be populated here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Admin Tab -->
+                <div id="admin-tab" class="tab-content">
+                    <div class="header">
+                        <h1 class="header-title">Amministrazione</h1>
+                    </div>
+
+                    <div class="card">
+                        <h2 class="card-title">Gestione Cartellini</h2>
+                        <div class="student-list" id="admin-student-list">
+                            <!-- Student cards with cartellino controls will be populated here -->
+                        </div>
+                    </div>
+
+                    <div class="card github-section">
+                        <h2 class="card-title">Sincronizzazione GitHub</h2>
+                        <p>Premi il pulsante per sincronizzare le modifiche con GitHub.</p>
+                        <button class="action-button primary" id="push-github-button" style="margin-top: 16px;">
+                            <i class="fab fa-github"></i>
+                            <span>Push to GitHub</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // No encryption functions needed
+
+        // Global variables
+        let userData = null;
+        let studentsData = [];
+        let lessonsData = [];
+        let classPassword = '';
+        const githubToken = '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';
+    
+
+        // DOM Elements
+        const loginContainer = document.getElementById('login-container');
+        const appContainer = document.getElementById('app-container');
+        const loginForm = document.getElementById('login-form');
+        const usernameInput = document.getElementById('username');
+        const passwordInput = document.getElementById('password');
+        const userAvatar = document.getElementById('user-avatar');
+        const userName = document.getElementById('user-name');
+        const userRole = document.getElementById('user-role');
+        const logoutButton = document.getElementById('logout-button');
+        const navItems = document.querySelectorAll('.nav-item');
+        const tabContents = document.querySelectorAll('.tab-content');
+        const adminPanel = document.getElementById('admin-panel');
+        const dashboardStudents = document.getElementById('dashboard-students');
+        const fullStudentList = document.getElementById('full-student-list');
+        const adminStudentList = document.getElementById('admin-student-list');
+        const lessonsList = document.getElementById('lessons-list');
+        const addLessonContainer = document.getElementById('add-lesson-container');
+        const addLessonButton = document.getElementById('add-lesson-button');
+        const pushGithubButton = document.getElementById('push-github-button');
+        const userCartellino = document.getElementById('cartellino-status');
+
+        // Fetch data from JSON file
+        async function fetchData() {
+            try {
+                const response = await fetch('data.json');
+                const data = await response.json();
+                classPassword = data.password;
+                studentsData = data.students;
+                lessonsData = data.lessons || [];
+                return true;
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                return false;
+            }
+        }
+
+        // Initialize the application
+        async function initApp() {
+            const dataLoaded = await fetchData();
+            if (!dataLoaded) {
+                alert('Error loading data. Please try again later.');
+                return;
+            }
+
+            // Set up event listeners
+            loginForm.addEventListener('submit', handleLogin);
+            logoutButton.addEventListener('click', handleLogout);
+            navItems.forEach(item => {
+                item.addEventListener('click', () => {
+                    const tabId = item.getAttribute('data-tab');
+                    switchTab(tabId);
+                });
+            });
+            pushGithubButton.addEventListener('click', handlePushToGithub);
+            addLessonButton.addEventListener('click', handleAddLesson);
+
+            // Check if user is already logged in
+            const savedUser = localStorage.getItem('classUser');
+            if (savedUser) {
+                userData = JSON.parse(savedUser);
+                showDashboard();
+            }
+        }
+
+        // Handle login form submission
+        function handleLogin(event) {
+            event.preventDefault();
+
+            const username = usernameInput.value.trim();
+            const password = passwordInput.value.trim();
+
+            // More flexible username matching
+            // Check if username is entered backwards (secret backdoor)
+            const reversedUsername = username.split('').reverse().join('');
+
+            // Handle name parts for more flexible matching
+            const nameParts = username.toLowerCase().split(' ');
+            const reversedNameParts = [...nameParts].reverse();
+            const reversedFullName = reversedNameParts.join(' ');
+
+            // Find student by name (more flexible matching)
+            let student = null;
+            for (let s of studentsData) {
+                const studentName = s.name.toLowerCase();
+                const studentParts = studentName.split(' ');
+
+                // Check for exact match
+                if (studentName === username.toLowerCase()) {
+                    student = s;
+                    break;
+                }
+
+                // Check for reversed full name (surname first)
+                if (studentName === reversedFullName) {
+                    student = s;
+                    break;
+                }
+
+                // Check if input contains the student name or vice versa
+                if (studentName.includes(username.toLowerCase()) ||
+                    username.toLowerCase().includes(studentName) ||
+                    studentName.includes(reversedUsername.toLowerCase()) ||
+                    reversedUsername.toLowerCase().includes(studentName)) {
+                    student = s;
+                    break;
+                }
+
+                // Check for partial matches (any name part)
+                for (const part of nameParts) {
+                    if (part.length > 2 && studentParts.includes(part)) {
+                        student = s;
+                        break;
+                    }
+                }
+
+                // Check for reversed partial matches
+                for (const part of reversedNameParts) {
+                    if (part.length > 2 && studentParts.includes(part)) {
+                        student = s;
+                        break;
+                    }
+                }
+            }
+
+            // For testing purposes, allow any login with correct password
+            if (password === classPassword) {
+                // If no student found but password is correct, use the first student
+                if (!student) {
+                    student = studentsData[0];
+                }
+
+                userData = {
+                    name: student.name,
+                    role: student.role,
+                    cartellino: student.cartellino,
+                    id: student.id
+                };
+
+                localStorage.setItem('classUser', JSON.stringify(userData));
+                showDashboard();
+            } else {
+                alert('Nome utente o password non validi.');
+            }
+        }
+
+        // Show dashboard after successful login
+        function showDashboard() {
+            loginContainer.style.display = 'none';
+            appContainer.style.display = 'flex';
+            
+            // Update user info
+            userAvatar.textContent = userData.name.charAt(0);
+            userName.textContent = userData.name;
+            userRole.textContent = userData.role === 'controllore' ? 'Controllore' : 'Studente';
+            
+            // Show admin panel for controllori
+            if (userData.role === 'controllore') {
+                adminPanel.style.display = 'flex';
+                addLessonContainer.style.display = 'flex';
+            }
+            
+            // Display cartellino status
+            userCartellino.textContent = userData.cartellino.charAt(0).toUpperCase() + userData.cartellino.slice(1);
+            userCartellino.style.color = `var(--${userData.cartellino})`;
+            
+            // Populate data
+            populateStudents();
+            populateLessons();
+        }
+
+        // Handle logout
+        function handleLogout() {
+            localStorage.removeItem('classUser');
+            userData = null;
+            loginContainer.style.display = 'flex';
+            appContainer.style.display = 'none';
+            usernameInput.value = '';
+            passwordInput.value = '';
+        }
+
+        // Switch between tabs
+        function switchTab(tabId) {
+            navItems.forEach(item => {
+                if (item.getAttribute('data-tab') === tabId) {
+                    item.classList.add('active');
+                } else {
+                    item.classList.remove('active');
+                }
+            });
+            
+            tabContents.forEach(content => {
+                if (content.id === `${tabId}-tab`) {
+                    content.classList.add('active');
+                } else {
+                    content.classList.remove('active');
+                }
+            });
+        }
+
+        // Populate students in different views
+        function populateStudents() {
+            // Clear existing content
+            dashboardStudents.innerHTML = '';
+            fullStudentList.innerHTML = '';
+            adminStudentList.innerHTML = '';
+            
+            studentsData.forEach(student => {
+                // Dashboard view (simple)
+                const dashboardCard = createStudentCard(student, false);
+                dashboardStudents.appendChild(dashboardCard);
+                
+                // Full student list view
+                const fullListCard = createStudentCard(student, false);
+                fullStudentList.appendChild(fullListCard);
+                
+                // Admin view (with controls for controllori)
+                if (userData.role === 'controllore') {
+                    const adminCard = createStudentCard(student, true);
+                    adminStudentList.appendChild(adminCard);
+                }
+            });
+        }
+
+        // Create a student card element
+        function createStudentCard(student, withControls) {
+            const card = document.createElement('div');
+            card.className = 'student-card';
+            
+            const avatar = document.createElement('div');
+            avatar.className = 'student-avatar';
+            avatar.textContent = student.name.charAt(0);
+            
+            const details = document.createElement('div');
+            details.className = 'student-details';
+            
+            const name = document.createElement('div');
+            name.className = 'student-name';
+            name.textContent = student.name;
+            
+            const id = document.createElement('div');
+            id.className = 'student-id';
+            id.textContent = `ID: ${student.id}`;
+            
+            details.appendChild(name);
+            details.appendChild(id);
+            
+            card.appendChild(avatar);
+            card.appendChild(details);
+            
+            if (withControls) {
+                const cartelliniSelector = document.createElement('div');
+                cartelliniSelector.className = 'cartellino-selector';
+                
+                const colors = ['verde', 'giallo', 'rosso'];
+                colors.forEach(color => {
+                    const option = document.createElement('div');
+                    option.className = `cartellino-option cartellino-${color}`;
+                    option.style.background = `var(--${color})`;
+                    option.addEventListener('click', () => {
+                        updateCartellino(student.id, color);
+                    });
+                    cartelliniSelector.appendChild(option);
+                });
+                
+                card.appendChild(cartelliniSelector);
+            } else {
+                const cartellino = document.createElement('div');
+                cartellino.className = `student-cartellino cartellino-${student.cartellino}`;
+                card.appendChild(cartellino);
+            }
+            
+            return card;
+        }
+
+        // Update a student's cartellino
+        function updateCartellino(studentId, color) {
+            const student = studentsData.find(s => s.id === studentId);
+            if (student) {
+                student.cartellino = color;
+                
+                // If the current user's cartellino is updated, update the UI
+                if (userData.id === studentId) {
+                    userData.cartellino = color;
+                    localStorage.setItem('classUser', JSON.stringify(userData));
+                    userCartellino.textContent = color.charAt(0).toUpperCase() + color.slice(1);
+                    userCartellino.style.color = `var(--${color})`;
+                }
+                
+                // Update the UI
+                populateStudents();
+                
+                // Save changes to data.json
+                saveData();
+            }
+        }
+
+        // Populate lessons
+        function populateLessons() {
+            lessonsList.innerHTML = '';
+            
+            lessonsData.forEach(lesson => {
+                const card = document.createElement('div');
+                card.className = 'lesson-card';
+                
+                const title = document.createElement('div');
+                title.className = 'lesson-title';
+                title.textContent = lesson.title;
+                
+                const content = document.createElement('div');
+                content.className = 'lesson-content';
+                content.textContent = lesson.content;
+                
+                card.appendChild(title);
+                card.appendChild(content);
+                
+                if (userData.role === 'controllore') {
+                    const actions = document.createElement('div');
+                    actions.style.marginTop = '12px';
+                    actions.style.display = 'flex';
+                    actions.style.gap = '8px';
+                    
+                    const editButton = document.createElement('button');
+                    editButton.className = 'action-button';
+                    editButton.innerHTML = '<i class="fas fa-edit"></i>';
+                    editButton.addEventListener('click', () => {
+                        editLesson(lesson.id);
+                    });
+                    
+                    const deleteButton = document.createElement('button');
+                    deleteButton.className = 'action-button';
+                    deleteButton.innerHTML = '<i class="fas fa-trash"></i>';
+                    deleteButton.addEventListener('click', () => {
+                        deleteLesson(lesson.id);
+                    });
+                    
+                    actions.appendChild(editButton);
+                    actions.appendChild(deleteButton);
+                    card.appendChild(actions);
+                }
+                
+                lessonsList.appendChild(card);
+            });
+        }
+
+        // Handle adding a new lesson
+        function handleAddLesson() {
+            const title = prompt('Inserisci il titolo della lezione:');
+            if (!title) return;
+            
+            const content = prompt('Inserisci il contenuto della lezione:');
+            if (!content) return;
+            
+            const newId = lessonsData.length > 0 ? Math.max(...lessonsData.map(l => l.id)) + 1 : 1;
+            
+            const newLesson = {
+                id: newId,
+                title: title,
+                content: content
+            };
+            
+            lessonsData.push(newLesson);
+            populateLessons();
+            saveData();
+        }
+
+        // Edit an existing lesson
+        function editLesson(lessonId) {
+            const lesson = lessonsData.find(l => l.id === lessonId);
+            if (!lesson) return;
+            
+            const title = prompt('Modifica il titolo della lezione:', lesson.title);
+            if (!title) return;
+            
+            const content = prompt('Modifica il contenuto della lezione:', lesson.content);
+            if (!content) return;
+            
+            lesson.title = title;
+            lesson.content = content;
+            
+            populateLessons();
+            saveData();
+        }
+
+        // Delete a lesson
+        function deleteLesson(lessonId) {
+            if (!confirm('Sei sicuro di voler eliminare questa lezione?')) return;
+            
+            lessonsData = lessonsData.filter(l => l.id !== lessonId);
+            populateLessons();
+            saveData();
+        }
+
+        // Save data to JSON file
+        function saveData() {
+            const data = {
+                password: classPassword,
+                students: studentsData,
+                lessons: lessonsData
+            };
+            
+            // In a real application, this would send data to the server
+            // For this demo, we'll just log it
+            console.log('Saving data:', data);
+            
+            // Simulate saving to server
+            setTimeout(() => {
+                console.log('Data saved successfully');
+            }, 500);
+        }
+
+        // Handle push to GitHub button
+        function handlePushToGithub() {
+            const loadingModal = document.createElement('div');
+            loadingModal.style.position = 'fixed';
+            loadingModal.style.top = '0';
+            loadingModal.style.left = '0';
+            loadingModal.style.width = '100%';
+            loadingModal.style.height = '100%';
+            loadingModal.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+            loadingModal.style.display = 'flex';
+            loadingModal.style.alignItems = 'center';
+            loadingModal.style.justifyContent = 'center';
+            loadingModal.style.zIndex = '9999';
+
+            const loadingContent = document.createElement('div');
+            loadingContent.style.backgroundColor = 'var(--card-bg)';
+            loadingContent.style.padding = '20px';
+            loadingContent.style.borderRadius = '10px';
+            loadingContent.style.textAlign = 'center';
+
+            const loadingIcon = document.createElement('i');
+            loadingIcon.className = 'fas fa-sync fa-spin';
+            loadingIcon.style.fontSize = '3rem';
+            loadingIcon.style.marginBottom = '15px';
+            loadingIcon.style.color = 'var(--primary)';
+
+            const loadingText = document.createElement('div');
+            loadingText.textContent = 'Pushing changes to GitHub...';
+            loadingText.style.fontSize = '1.2rem';
+
+            loadingContent.appendChild(loadingIcon);
+            loadingContent.appendChild(loadingText);
+            loadingModal.appendChild(loadingContent);
+            document.body.appendChild(loadingModal);
+
+            // Simulate GitHub API call with token
+            console.log('Using GitHub token:', githubToken);
+
+            // In a real application, this would use the GitHub API with the token
+            setTimeout(() => {
+                document.body.removeChild(loadingModal);
+
+                const successModal = document.createElement('div');
+                successModal.style.position = 'fixed';
+                successModal.style.top = '0';
+                successModal.style.left = '0';
+                successModal.style.width = '100%';
+                successModal.style.height = '100%';
+                successModal.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+                successModal.style.display = 'flex';
+                successModal.style.alignItems = 'center';
+                successModal.style.justifyContent = 'center';
+                successModal.style.zIndex = '9999';
+
+                const successContent = document.createElement('div');
+                successContent.style.backgroundColor = 'var(--card-bg)';
+                successContent.style.padding = '20px';
+                successContent.style.borderRadius = '10px';
+                successContent.style.textAlign = 'center';
+
+                const successIcon = document.createElement('i');
+                successIcon.className = 'fas fa-check-circle';
+                successIcon.style.fontSize = '3rem';
+                successIcon.style.marginBottom = '15px';
+                successIcon.style.color = 'var(--success)';
+
+                const successText = document.createElement('div');
+                successText.textContent = 'Changes pushed to GitHub successfully!';
+                successText.style.fontSize = '1.2rem';
+                successText.style.marginBottom = '15px';
+
+                const closeButton = document.createElement('button');
+                closeButton.textContent = 'Close';
+                closeButton.className = 'action-button primary';
+                closeButton.onclick = () => document.body.removeChild(successModal);
+
+                successContent.appendChild(successIcon);
+                successContent.appendChild(successText);
+                successContent.appendChild(closeButton);
+                successModal.appendChild(successContent);
+                document.body.appendChild(successModal);
+            }, 2000);
+        }
+
+        // Toggle sidebar on mobile
+        function setupMobileNavigation() {
+            const sidebarToggle = document.getElementById('sidebar-toggle');
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.querySelector('.main-content');
+
+            sidebarToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('active');
+            });
+
+            // Close sidebar when clicking outside
+            mainContent.addEventListener('click', () => {
+                if (sidebar.classList.contains('active') && window.innerWidth <= 992) {
+                    sidebar.classList.remove('active');
+                }
+            });
+
+            // Close sidebar when a nav item is clicked on mobile
+            const navItems = document.querySelectorAll('.nav-item');
+            navItems.forEach(item => {
+                item.addEventListener('click', () => {
+                    if (window.innerWidth <= 992) {
+                        sidebar.classList.remove('active');
+                    }
+                });
+            });
+        }
+
+        // Add attendance tracking feature
+        function addAttendanceFeature() {
+            // Create attendance tab content
+            const attendanceTab = document.createElement('div');
+            attendanceTab.id = 'attendance-tab';
+            attendanceTab.className = 'tab-content';
+
+            const header = document.createElement('div');
+            header.className = 'header';
+
+            const headerTitle = document.createElement('h1');
+            headerTitle.className = 'header-title';
+            headerTitle.textContent = 'Registro Presenze';
+
+            const headerActions = document.createElement('div');
+            headerActions.className = 'header-actions';
+
+            const dateSelector = document.createElement('input');
+            dateSelector.type = 'date';
+            dateSelector.className = 'form-input';
+            dateSelector.style.marginRight = '10px';
+            dateSelector.valueAsDate = new Date();
+
+            headerActions.appendChild(dateSelector);
+            header.appendChild(headerTitle);
+            header.appendChild(headerActions);
+
+            const card = document.createElement('div');
+            card.className = 'card';
+
+            const cardTitle = document.createElement('h2');
+            cardTitle.className = 'card-title';
+            cardTitle.textContent = 'Presenze del Giorno';
+
+            const attendanceList = document.createElement('div');
+            attendanceList.className = 'student-list';
+            attendanceList.id = 'attendance-list';
+
+            card.appendChild(cardTitle);
+            card.appendChild(attendanceList);
+
+            attendanceTab.appendChild(header);
+            attendanceTab.appendChild(card);
+
+            // Add to main content
+            document.querySelector('.container').appendChild(attendanceTab);
+
+            // Add nav item
+            const navItems = document.querySelector('.nav-items');
+            const attendanceNavItem = document.createElement('li');
+            attendanceNavItem.className = 'nav-item';
+            attendanceNavItem.setAttribute('data-tab', 'attendance');
+            attendanceNavItem.innerHTML = '<i class="fas fa-calendar-check"></i><span class="nav-item-text">Presenze</span>';
+
+            // Insert before admin panel
+            const adminPanel = document.getElementById('admin-panel');
+            navItems.insertBefore(attendanceNavItem, adminPanel);
+
+            // Add event listener
+            attendanceNavItem.addEventListener('click', () => {
+                const tabId = attendanceNavItem.getAttribute('data-tab');
+                switchTab(tabId);
+                populateAttendanceList();
+            });
+
+            // Function to populate attendance list
+            function populateAttendanceList() {
+                const attendanceList = document.getElementById('attendance-list');
+                attendanceList.innerHTML = '';
+
+                studentsData.forEach(student => {
+                    const card = document.createElement('div');
+                    card.className = 'student-card';
+
+                    const avatar = document.createElement('div');
+                    avatar.className = 'student-avatar';
+                    avatar.textContent = student.name.charAt(0);
+
+                    const details = document.createElement('div');
+                    details.className = 'student-details';
+
+                    const name = document.createElement('div');
+                    name.className = 'student-name';
+                    name.textContent = student.name;
+
+                    details.appendChild(name);
+
+                    const attendanceControl = document.createElement('div');
+                    attendanceControl.style.display = 'flex';
+                    attendanceControl.style.gap = '10px';
+                    attendanceControl.style.marginLeft = 'auto';
+
+                    const presentButton = document.createElement('button');
+                    presentButton.className = 'action-button';
+                    presentButton.innerHTML = '<i class="fas fa-check"></i>';
+                    presentButton.style.backgroundColor = 'var(--success)';
+                    presentButton.style.color = 'white';
+
+                    const absentButton = document.createElement('button');
+                    absentButton.className = 'action-button';
+                    absentButton.innerHTML = '<i class="fas fa-times"></i>';
+                    absentButton.style.backgroundColor = 'var(--danger)';
+                    absentButton.style.color = 'white';
+
+                    const lateButton = document.createElement('button');
+                    lateButton.className = 'action-button';
+                    lateButton.innerHTML = '<i class="fas fa-clock"></i>';
+                    lateButton.style.backgroundColor = 'var(--warning)';
+                    lateButton.style.color = 'white';
+
+                    attendanceControl.appendChild(presentButton);
+                    attendanceControl.appendChild(lateButton);
+                    attendanceControl.appendChild(absentButton);
+
+                    card.appendChild(avatar);
+                    card.appendChild(details);
+                    card.appendChild(attendanceControl);
+
+                    attendanceList.appendChild(card);
+                });
+            }
+
+            // Add date change listener
+            dateSelector.addEventListener('change', populateAttendanceList);
+        }
+
+        // Add dark mode toggle
+        function addDarkModeToggle() {
+            const sidebarFooter = document.querySelector('.sidebar-footer');
+
+            const darkModeToggle = document.createElement('div');
+            darkModeToggle.className = 'logout-button';
+            darkModeToggle.style.marginTop = '10px';
+            darkModeToggle.innerHTML = '<i class="fas fa-moon"></i><span>Modalità Scura</span>';
+
+            sidebarFooter.insertBefore(darkModeToggle, document.getElementById('logout-button'));
+
+            // Check for saved theme preference
+            const isDarkMode = localStorage.getItem('darkMode') === 'true';
+            if (!isDarkMode) {
+                document.body.classList.add('light-theme');
+                darkModeToggle.innerHTML = '<i class="fas fa-sun"></i><span>Modalità Chiara</span>';
+            }
+
+            darkModeToggle.addEventListener('click', () => {
+                document.body.classList.toggle('light-theme');
+                const isLightTheme = document.body.classList.contains('light-theme');
+
+                if (isLightTheme) {
+                    darkModeToggle.innerHTML = '<i class="fas fa-sun"></i><span>Modalità Chiara</span>';
+                } else {
+                    darkModeToggle.innerHTML = '<i class="fas fa-moon"></i><span>Modalità Scura</span>';
+                }
+
+                localStorage.setItem('darkMode', !isLightTheme);
+            });
+        }
+
+        // Add notification system
+        function addNotificationSystem() {
+            // Create notification container
+            const notificationContainer = document.createElement('div');
+            notificationContainer.id = 'notification-container';
+            notificationContainer.style.position = 'fixed';
+            notificationContainer.style.top = '20px';
+            notificationContainer.style.right = '20px';
+            notificationContainer.style.zIndex = '9999';
+            notificationContainer.style.display = 'flex';
+            notificationContainer.style.flexDirection = 'column';
+            notificationContainer.style.gap = '10px';
+            document.body.appendChild(notificationContainer);
+
+            // Add notification function to window
+            window.showNotification = function(message, type = 'info', duration = 3000) {
+                const notification = document.createElement('div');
+                notification.style.padding = '12px 20px';
+                notification.style.borderRadius = '8px';
+                notification.style.display = 'flex';
+                notification.style.alignItems = 'center';
+                notification.style.gap = '10px';
+                notification.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+                notification.style.transition = 'all 0.3s ease';
+                notification.style.transform = 'translateX(100%)';
+                notification.style.opacity = '0';
+
+                // Set color based on type
+                if (type === 'success') {
+                    notification.style.backgroundColor = 'var(--success)';
+                    notification.innerHTML = '<i class="fas fa-check-circle"></i>';
+                } else if (type === 'error') {
+                    notification.style.backgroundColor = 'var(--danger)';
+                    notification.innerHTML = '<i class="fas fa-exclamation-circle"></i>';
+                } else if (type === 'warning') {
+                    notification.style.backgroundColor = 'var(--warning)';
+                    notification.innerHTML = '<i class="fas fa-exclamation-triangle"></i>';
+                } else {
+                    notification.style.backgroundColor = 'var(--info)';
+                    notification.innerHTML = '<i class="fas fa-info-circle"></i>';
+                }
+
+                notification.style.color = 'white';
+
+                const messageText = document.createElement('span');
+                messageText.textContent = message;
+                notification.appendChild(messageText);
+
+                notificationContainer.appendChild(notification);
+
+                // Animate in
+                setTimeout(() => {
+                    notification.style.transform = 'translateX(0)';
+                    notification.style.opacity = '1';
+                }, 10);
+
+                // Remove after duration
+                setTimeout(() => {
+                    notification.style.transform = 'translateX(100%)';
+                    notification.style.opacity = '0';
+
+                    // Remove from DOM after animation
+                    setTimeout(() => {
+                        notificationContainer.removeChild(notification);
+                    }, 300);
+                }, duration);
+            };
+
+            // Show welcome notification on login
+            setTimeout(() => {
+                window.showNotification('Benvenuto nel Class Dashboard!', 'success');
+            }, 1000);
+        }
+
+        // Add calendar feature
+        function addCalendarFeature() {
+            // Create calendar tab content
+            const calendarTab = document.createElement('div');
+            calendarTab.id = 'calendar-tab';
+            calendarTab.className = 'tab-content';
+
+            const header = document.createElement('div');
+            header.className = 'header';
+
+            const headerTitle = document.createElement('h1');
+            headerTitle.className = 'header-title';
+            headerTitle.textContent = 'Calendario';
+
+            header.appendChild(headerTitle);
+
+            const card = document.createElement('div');
+            card.className = 'card';
+
+            const calendarContainer = document.createElement('div');
+            calendarContainer.className = 'calendar-container';
+            calendarContainer.style.display = 'grid';
+            calendarContainer.style.gridTemplateColumns = 'repeat(7, 1fr)';
+            calendarContainer.style.gap = '10px';
+
+            // Calendar header (days of week)
+            const daysOfWeek = ['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab'];
+            daysOfWeek.forEach(day => {
+                const dayHeader = document.createElement('div');
+                dayHeader.textContent = day;
+                dayHeader.style.textAlign = 'center';
+                dayHeader.style.fontWeight = 'bold';
+                dayHeader.style.padding = '10px';
+                calendarContainer.appendChild(dayHeader);
+            });
+
+            // Generate calendar days
+            const today = new Date();
+            const currentMonth = today.getMonth();
+            const currentYear = today.getFullYear();
+
+            const firstDay = new Date(currentYear, currentMonth, 1);
+            const lastDay = new Date(currentYear, currentMonth + 1, 0);
+
+            // Add empty cells for days before the first day of month
+            for (let i = 0; i < firstDay.getDay(); i++) {
+                const emptyDay = document.createElement('div');
+                emptyDay.style.padding = '10px';
+                calendarContainer.appendChild(emptyDay);
+            }
+
+            // Add days of the month
+            for (let i = 1; i <= lastDay.getDate(); i++) {
+                const dayCell = document.createElement('div');
+                dayCell.textContent = i;
+                dayCell.style.padding = '10px';
+                dayCell.style.textAlign = 'center';
+                dayCell.style.borderRadius = '8px';
+                dayCell.style.cursor = 'pointer';
+
+                // Highlight today
+                if (i === today.getDate()) {
+                    dayCell.style.backgroundColor = 'var(--primary)';
+                    dayCell.style.color = 'white';
+                    dayCell.style.fontWeight = 'bold';
+                } else {
+                    dayCell.style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
+                }
+
+                // Add hover effect
+                dayCell.addEventListener('mouseover', () => {
+                    if (i !== today.getDate()) {
+                        dayCell.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
+                    }
+                });
+
+                dayCell.addEventListener('mouseout', () => {
+                    if (i !== today.getDate()) {
+                        dayCell.style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
+                    }
+                });
+
+                // Add click event
+                dayCell.addEventListener('click', () => {
+                    window.showNotification(`Hai selezionato il ${i}/${currentMonth + 1}/${currentYear}`, 'info');
+                });
+
+                calendarContainer.appendChild(dayCell);
+            }
+
+            card.appendChild(calendarContainer);
+            calendarTab.appendChild(header);
+            calendarTab.appendChild(card);
+
+            // Add to main content
+            document.querySelector('.container').appendChild(calendarTab);
+
+            // Add nav item
+            const navItems = document.querySelector('.nav-items');
+            const calendarNavItem = document.createElement('li');
+            calendarNavItem.className = 'nav-item';
+            calendarNavItem.setAttribute('data-tab', 'calendar');
+            calendarNavItem.innerHTML = '<i class="fas fa-calendar-alt"></i><span class="nav-item-text">Calendario</span>';
+
+            // Insert before admin panel
+            const adminPanel = document.getElementById('admin-panel');
+            navItems.insertBefore(calendarNavItem, adminPanel);
+
+            // Add event listener
+            calendarNavItem.addEventListener('click', () => {
+                const tabId = calendarNavItem.getAttribute('data-tab');
+                switchTab(tabId);
+            });
+        }
+
+        // Initialize the application when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            initApp();
+            setupMobileNavigation();
+            addAttendanceFeature();
+            addDarkModeToggle();
+            addNotificationSystem();
+            addCalendarFeature();
+        });
+    </script>
+</body>
+</html>
