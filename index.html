@@ -2020,7 +2020,6 @@
             const jsonData = JSON.stringify(data, null, 2);
 
             // Now we'll use the GitHub API to update the data.json file
-            // First, we need to get the current file's SHA
             updateLoadingStatus('Connessione a GitHub API...');
 
             // GitHub API URLs
@@ -2076,6 +2075,8 @@
                 return response.json();
             })
             .then(result => {
+                console.log('GitHub API response:', result);
+
                 // Success! The file was updated
                 document.body.removeChild(loadingModal);
 
@@ -2139,62 +2140,228 @@
 
                 console.error('GitHub API error:', error);
 
-                // Show error modal
-                const errorModal = document.createElement('div');
-                errorModal.style.position = 'fixed';
-                errorModal.style.top = '0';
-                errorModal.style.left = '0';
-                errorModal.style.width = '100%';
-                errorModal.style.height = '100%';
-                errorModal.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
-                errorModal.style.display = 'flex';
-                errorModal.style.alignItems = 'center';
-                errorModal.style.justifyContent = 'center';
-                errorModal.style.zIndex = '9999';
-
-                const errorContent = document.createElement('div');
-                errorContent.style.backgroundColor = 'var(--card-bg)';
-                errorContent.style.padding = '20px';
-                errorContent.style.borderRadius = '10px';
-                errorContent.style.textAlign = 'center';
-
-                const errorIcon = document.createElement('i');
-                errorIcon.className = 'fas fa-exclamation-circle';
-                errorIcon.style.fontSize = '3rem';
-                errorIcon.style.marginBottom = '15px';
-                errorIcon.style.color = 'var(--danger)';
-
-                const errorText = document.createElement('div');
-                errorText.textContent = 'Errore durante la pubblicazione su GitHub';
-                errorText.style.fontSize = '1.2rem';
-                errorText.style.marginBottom = '15px';
-
-                const errorDetails = document.createElement('div');
-                errorDetails.textContent = error.message;
-                errorDetails.style.fontSize = '0.9rem';
-                errorDetails.style.marginBottom = '15px';
-                errorDetails.style.color = 'rgba(255, 255, 255, 0.7)';
-
-                const closeButton = document.createElement('button');
-                closeButton.textContent = 'Chiudi';
-                closeButton.className = 'action-button primary';
-                closeButton.onclick = () => document.body.removeChild(errorModal);
-
-                errorContent.appendChild(errorIcon);
-                errorContent.appendChild(errorText);
-                errorContent.appendChild(errorDetails);
-                errorContent.appendChild(closeButton);
-                errorModal.appendChild(errorContent);
-                document.body.appendChild(errorModal);
-
-                // Show notification
-                window.showNotification('Errore durante la pubblicazione su GitHub', 'error');
+                // Try alternative method if the first one fails
+                tryAlternativeGitHubMethod(config, data, jsonData);
             });
 
             // Helper function to update the loading status
             function updateLoadingStatus(status) {
                 loadingStatus.textContent = status;
             }
+        }
+
+        // Alternative GitHub method (using a different approach)
+        function tryAlternativeGitHubMethod(config, data, jsonData) {
+            console.log('Trying alternative GitHub method...');
+
+            // Create loading modal
+            const loadingModal = document.createElement('div');
+            loadingModal.style.position = 'fixed';
+            loadingModal.style.top = '0';
+            loadingModal.style.left = '0';
+            loadingModal.style.width = '100%';
+            loadingModal.style.height = '100%';
+            loadingModal.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+            loadingModal.style.display = 'flex';
+            loadingModal.style.alignItems = 'center';
+            loadingModal.style.justifyContent = 'center';
+            loadingModal.style.zIndex = '9999';
+
+            const loadingContent = document.createElement('div');
+            loadingContent.style.backgroundColor = 'var(--card-bg)';
+            loadingContent.style.padding = '20px';
+            loadingContent.style.borderRadius = '10px';
+            loadingContent.style.textAlign = 'center';
+
+            const loadingIcon = document.createElement('i');
+            loadingIcon.className = 'fas fa-sync fa-spin';
+            loadingIcon.style.fontSize = '3rem';
+            loadingIcon.style.marginBottom = '15px';
+            loadingIcon.style.color = 'var(--primary)';
+
+            const loadingText = document.createElement('div');
+            loadingText.textContent = 'Tentativo alternativo di pubblicazione...';
+            loadingText.style.fontSize = '1.2rem';
+
+            loadingContent.appendChild(loadingIcon);
+            loadingContent.appendChild(loadingText);
+            loadingModal.appendChild(loadingContent);
+            document.body.appendChild(loadingModal);
+
+            // GitHub API URLs
+            const apiBaseUrl = 'https://api.github.com';
+            const repoUrl = `${apiBaseUrl}/repos/${config.username}/${config.repo}`;
+            const contentUrl = `${repoUrl}/contents/data.json`;
+
+            // First get the file to get its SHA
+            fetch(contentUrl, {
+                headers: {
+                    'Authorization': `token ${config.token}`
+                }
+            })
+            .then(response => {
+                if (response.status === 404) {
+                    // File doesn't exist, create it
+                    return { sha: null };
+                }
+                return response.json();
+            })
+            .then(fileInfo => {
+                // Prepare the request body
+                const body = {
+                    message: 'Update data.json via dashboard',
+                    content: btoa(unescape(encodeURIComponent(jsonData)))
+                };
+
+                if (fileInfo.sha) {
+                    body.sha = fileInfo.sha;
+                }
+
+                // Make the PUT request to update the file
+                return fetch(contentUrl, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `token ${config.token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(body)
+                });
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Alternative method response:', data);
+
+                // Remove loading modal
+                document.body.removeChild(loadingModal);
+
+                if (data.content) {
+                    // Success
+                    const successModal = document.createElement('div');
+                    successModal.style.position = 'fixed';
+                    successModal.style.top = '0';
+                    successModal.style.left = '0';
+                    successModal.style.width = '100%';
+                    successModal.style.height = '100%';
+                    successModal.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+                    successModal.style.display = 'flex';
+                    successModal.style.alignItems = 'center';
+                    successModal.style.justifyContent = 'center';
+                    successModal.style.zIndex = '9999';
+
+                    const successContent = document.createElement('div');
+                    successContent.style.backgroundColor = 'var(--card-bg)';
+                    successContent.style.padding = '20px';
+                    successContent.style.borderRadius = '10px';
+                    successContent.style.textAlign = 'center';
+
+                    const successIcon = document.createElement('i');
+                    successIcon.className = 'fas fa-check-circle';
+                    successIcon.style.fontSize = '3rem';
+                    successIcon.style.marginBottom = '15px';
+                    successIcon.style.color = 'var(--success)';
+
+                    const successText = document.createElement('div');
+                    successText.innerHTML = `Dati pubblicati con successo su GitHub!<br>Repository: <strong>${config.username}/${config.repo}</strong>`;
+                    successText.style.fontSize = '1.2rem';
+                    successText.style.marginBottom = '15px';
+
+                    const closeButton = document.createElement('button');
+                    closeButton.textContent = 'Chiudi';
+                    closeButton.className = 'action-button primary';
+                    closeButton.onclick = () => document.body.removeChild(successModal);
+
+                    successContent.appendChild(successIcon);
+                    successContent.appendChild(successText);
+                    successContent.appendChild(closeButton);
+                    successModal.appendChild(successContent);
+                    document.body.appendChild(successModal);
+
+                    window.showNotification('Dati pubblicati su GitHub con successo!', 'success');
+                } else {
+                    // Error
+                    showGitHubError('Errore durante la pubblicazione su GitHub (metodo alternativo)');
+                }
+            })
+            .catch(error => {
+                console.error('Alternative GitHub method error:', error);
+                document.body.removeChild(loadingModal);
+                showGitHubError('Errore durante la pubblicazione su GitHub: ' + error.message);
+            });
+        }
+
+        // Helper function to show GitHub errors
+        function showGitHubError(message) {
+            const errorModal = document.createElement('div');
+            errorModal.style.position = 'fixed';
+            errorModal.style.top = '0';
+            errorModal.style.left = '0';
+            errorModal.style.width = '100%';
+            errorModal.style.height = '100%';
+            errorModal.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+            errorModal.style.display = 'flex';
+            errorModal.style.alignItems = 'center';
+            errorModal.style.justifyContent = 'center';
+            errorModal.style.zIndex = '9999';
+
+            const errorContent = document.createElement('div');
+            errorContent.style.backgroundColor = 'var(--card-bg)';
+            errorContent.style.padding = '20px';
+            errorContent.style.borderRadius = '10px';
+            errorContent.style.textAlign = 'center';
+
+            const errorIcon = document.createElement('i');
+            errorIcon.className = 'fas fa-exclamation-circle';
+            errorIcon.style.fontSize = '3rem';
+            errorIcon.style.marginBottom = '15px';
+            errorIcon.style.color = 'var(--danger)';
+
+            const errorText = document.createElement('div');
+            errorText.textContent = message;
+            errorText.style.fontSize = '1.2rem';
+            errorText.style.marginBottom = '15px';
+
+            const helpText = document.createElement('div');
+            helpText.innerHTML = `
+                <p>Suggerimenti per risolvere il problema:</p>
+                <ul style="text-align: left; margin-top: 10px; margin-bottom: 15px;">
+                    <li>Verifica che il token GitHub sia valido e abbia i permessi corretti (scope 'repo')</li>
+                    <li>Controlla che il nome utente e il repository siano corretti</li>
+                    <li>Assicurati di avere accesso in scrittura al repository</li>
+                </ul>
+            `;
+            helpText.style.fontSize = '0.9rem';
+            helpText.style.color = 'rgba(255, 255, 255, 0.8)';
+
+            const closeButton = document.createElement('button');
+            closeButton.textContent = 'Chiudi';
+            closeButton.className = 'action-button primary';
+            closeButton.onclick = () => document.body.removeChild(errorModal);
+
+            const retryButton = document.createElement('button');
+            retryButton.textContent = 'Riprova';
+            retryButton.className = 'action-button';
+            retryButton.style.marginRight = '10px';
+            retryButton.onclick = () => {
+                document.body.removeChild(errorModal);
+                handlePushToGithub();
+            };
+
+            const buttonContainer = document.createElement('div');
+            buttonContainer.style.display = 'flex';
+            buttonContainer.style.justifyContent = 'center';
+            buttonContainer.style.gap = '10px';
+
+            buttonContainer.appendChild(retryButton);
+            buttonContainer.appendChild(closeButton);
+
+            errorContent.appendChild(errorIcon);
+            errorContent.appendChild(errorText);
+            errorContent.appendChild(helpText);
+            errorContent.appendChild(buttonContainer);
+            errorModal.appendChild(errorContent);
+            document.body.appendChild(errorModal);
+
+            window.showNotification('Errore durante la pubblicazione su GitHub', 'error');
         }
 
         // Toggle sidebar on mobile
